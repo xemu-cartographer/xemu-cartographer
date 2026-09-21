@@ -1,7 +1,7 @@
 // Client for the opaque-key routes (/api/admin/tokens — design §6.3).
 //
 // Three kinds of key: `machine` (LAN clients), `spectator` (overlay browser
-// sources, minted from Studio) and `device` (kiosks). The secret is returned
+// sources, minted from Studio) and `device` (stations). The secret is returned
 // exactly once by mint; the list never carries it. Every call sends the PB
 // JWT; the server answers 401 to anonymous callers and 403 when the caller
 // lacks `token.mint:<kind>` / `token.list` / `token.revoke:<kid>`

@@ -9,7 +9,7 @@
 // keyboard→controller map is the SDL-scancode path, while `sendkey` feeds the
 // emulated keyboard through qemu_input — a channel the game never reads. A
 // virtual pad enters through the same SDL controller path a physical pad (or
-// the kiosk) uses, so it actually moves the game (proven live — see cmd/vpad
+// the screen) uses, so it actually moves the game (proven live — see cmd/vpad
 // and cmd/inputpoc).
 //
 // The device descriptor is byte-for-byte what padpool.py uses (name

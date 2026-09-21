@@ -37,7 +37,6 @@ var SeedRoles = []RoleSeed{
 			"notification.admin_edit:*",
 			"container.manage:*",
 			"box.*",
-			"kiosk.*",
 			"lan.*",
 			"room.join:*",
 			"scraper.*",

@@ -34,9 +34,9 @@ export const ACTIONS = [
 	'overlay.read_state',
 	'overlay.list_consoles',
 	'overlay.mint',
-	// Kiosk / box / containers
-	'kiosk.view',
-	'kiosk.input',
+	// Box: screen (view/drive) + lifecycle
+	'box.view',
+	'box.drive',
 	'box.read',
 	'box.control',
 	'box.teardown',

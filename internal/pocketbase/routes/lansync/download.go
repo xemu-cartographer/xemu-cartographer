@@ -10,7 +10,7 @@ import (
 	"github.com/xemu-cartographer/xemu-cartographer/internal/lansync"
 )
 
-// Kiosk-scoped download endpoints (SPEC §4.4) — headless stations pull the
+// Station-scoped download endpoints (SPEC §4.4) — headless stations pull the
 // server-extracted artifacts, under authorizeLAN:
 //
 //	GET /api/lan/sync/dl/game/{id}  → tar of the extracted disc tree (isos/{id})

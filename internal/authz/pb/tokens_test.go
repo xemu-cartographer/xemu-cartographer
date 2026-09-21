@@ -31,7 +31,7 @@ func TestMintValidates(t *testing.T) {
 		{"spectator two instances", pb.MintRequest{Kind: "spectator", Scopes: []string{"overlay.read_state:a", "overlay.read_state:b"}}, authz.ErrSpectatorInstance},
 		{"spectator no instance", pb.MintRequest{Kind: "spectator", Scopes: []string{"overlay.read_state"}}, authz.ErrSpectatorInstance},
 		{"spectator wrong action", pb.MintRequest{Kind: "spectator", Scopes: []string{"lan.saves.file:x"}}, authz.ErrScopeSyntax},
-		{"device wildcard", pb.MintRequest{Kind: "device", Scopes: []string{"kiosk.view:*"}}, authz.ErrWildcardKind},
+		{"device wildcard", pb.MintRequest{Kind: "device", Scopes: []string{"box.view:*"}}, authz.ErrWildcardKind},
 		{"past expiry", pb.MintRequest{Kind: "machine", Scopes: []string{"lan.*"}, ExpiresAt: ptrTime(time.Now().Add(-time.Hour))}, pb.ErrMintRequest},
 		{"unknown user", pb.MintRequest{Kind: "machine", Scopes: []string{"lan.*"}, UserID: "nosuchuser00000"}, pb.ErrMintRequest},
 		{"unknown gamertag", pb.MintRequest{Kind: "machine", Scopes: []string{"lan.*"}, Gamertags: []string{"ghost"}}, pb.ErrMintRequest},
@@ -113,7 +113,7 @@ func TestMintValidates(t *testing.T) {
 		t.Fatalf("spectator kid = %q", sres.Kid)
 	}
 	// Device: container defaults to the scoped instance.
-	dres, err := pb.Mint(app, d, actor, pb.MintRequest{Kind: "device", Scopes: []string{"kiosk.view:xc-2"}})
+	dres, err := pb.Mint(app, d, actor, pb.MintRequest{Kind: "device", Scopes: []string{"box.view:xc-2"}})
 	if err != nil {
 		t.Fatalf("mint device: %v", err)
 	}
@@ -145,7 +145,7 @@ func TestMintValidates(t *testing.T) {
 	if _, err := pb.Mint(app, d, mp, pb.MintRequest{Kind: "machine", Scopes: []string{"lan.saves.*"}}); err != nil {
 		t.Fatalf("machine minting machine: %v", err)
 	}
-	if _, err := pb.Mint(app, d, mp, pb.MintRequest{Kind: "device", Scopes: []string{"kiosk.view:xc-1"}}); !errors.Is(err, pb.ErrForbidden) {
+	if _, err := pb.Mint(app, d, mp, pb.MintRequest{Kind: "device", Scopes: []string{"box.view:xc-1"}}); !errors.Is(err, pb.ErrForbidden) {
 		t.Fatalf("token.mint:machine minting device: %v", err)
 	}
 }
@@ -320,7 +320,7 @@ func TestListNeverReturnsHash(t *testing.T) {
 	app, d := pbtest.NewApp(t)
 	pbtest.MintToken(t, app, d, "machine", []string{"lan.*"}, func(r *pb.MintRequest) { r.Label = "m1" })
 	pbtest.MintToken(t, app, d, "spectator", []string{"overlay.read_state:xc-1"})
-	dkid, _ := pbtest.MintToken(t, app, d, "device", []string{"kiosk.view:xc-1"})
+	dkid, _ := pbtest.MintToken(t, app, d, "device", []string{"box.view:xc-1"})
 	if err := pb.RevokeToken(app, d, authz.Internal("t"), dkid, "done"); err != nil {
 		t.Fatalf("revoke device: %v", err)
 	}

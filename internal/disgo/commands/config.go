@@ -314,7 +314,7 @@ type channelSpec struct {
 func bootstrapChannelSpec() []channelSpec {
 	return []channelSpec{
 		{"container-status", discordcfg.HookContainerStatus},
-		{"kiosk-links", discordcfg.HookKioskLinks},
+		{"play-links", discordcfg.HookPlayLinks},
 		{"announcements", discordcfg.HookAnnouncements},
 		{"bot-log", discordcfg.HookBotLog},
 	}

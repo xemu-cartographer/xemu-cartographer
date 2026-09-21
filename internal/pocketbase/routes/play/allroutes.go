@@ -7,7 +7,7 @@
 // player can only see and drive the box their gamertag is currently in. Admins
 // may target any container with ?container=<name>.
 //
-// The admin kiosk + VNC keyboard path (routes/containers) is untouched; this is
+// The admin screen + VNC keyboard path (routes/containers) is untouched; this is
 // a parallel, narrower surface onto the same host-runner arbitration the admin
 // endpoints use, so an admin take-over (authority=admin) still natively suspends
 // whatever a player set here.

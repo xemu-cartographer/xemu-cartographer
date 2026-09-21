@@ -1,7 +1,7 @@
 // Package gamertags holds the small read helper M09 needs to test a user's
 // gamertags against live container rosters. It exists as a leaf package
 // (core.App + dbx only) so the three consumers that need it — the WS room
-// guard, the kiosk/VNC proxy, and the play roster resolver — share one
+// guard, the screen/VNC proxy, and the play roster resolver — share one
 // query + sanitization path without importing each other.
 package gamertags
 

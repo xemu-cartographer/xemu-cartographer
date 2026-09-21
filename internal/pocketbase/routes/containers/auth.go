@@ -9,32 +9,32 @@ import (
 	"github.com/xemu-cartographer/xemu-cartographer/internal/authz/pb"
 )
 
-// kioskTokenCookie is the cookie name used to carry a credential through the
+// screenTokenCookie is the cookie name used to carry a credential through the
 // iframe's sub-resource requests. The iframe entry-point is fetched with
 // ?token=…; once validated, this cookie is set with Path scoped to the
-// per-container kiosk prefix so CSS/JS/images/websockify under that prefix
+// per-container screen prefix so CSS/JS/images/websockify under that prefix
 // authenticate without the parent page rewriting URLs.
-const kioskTokenCookie = "kiosk_token"
+const screenTokenCookie = "screen_token"
 
-// kioskCookieMaxAge bounds the kiosk cookie's lifetime (12h, PD-11) so a
-// forgotten kiosk tab does not keep a credential alive indefinitely.
-const kioskCookieMaxAge = 43200
+// screenCookieMaxAge bounds the screen cookie's lifetime (12h, PD-11) so a
+// forgotten screen tab does not keep a credential alive indefinitely.
+const screenCookieMaxAge = 43200
 
-// authorizeKioskAccess admits a caller to the kiosk/VNC proxy for container
-// `name` (M09 9b/9c) for action a — kiosk.view for the noVNC proxy,
-// kiosk.input for the VNC relay. The credential comes from ?token= or the
-// kiosk_token cookie (pb.ResolveKiosk: a PB JWT or an opaque device key) and
+// authorizeBoxAccess admits a caller to the screen/VNC proxy for container
+// `name` (M09 9b/9c) for action a — box.view for the noVNC proxy,
+// box.drive for the VNC relay. The credential comes from ?token= or the
+// screen_token cookie (pb.ResolveScreen: a PB JWT or an opaque device key) and
 // the decision is the rule table's: a scoped principal, a user whose
 // gamertag is in that container's live roster (with the rostergrace TTL) or
 // who owns the box, or a device key bound to the instance. Re-checked on
 // every request; fails closed on any lookup error or before the deps are
 // installed at boot.
-func authorizeKioskAccess(e *core.RequestEvent, name string, a authz.Action) bool {
+func authorizeBoxAccess(e *core.RequestEvent, name string, a authz.Action) bool {
 	if e == nil || e.App == nil {
 		return false
 	}
 	d := pb.Default()
-	p, _ := pb.ResolveKiosk(e.App, d, e)
+	p, _ := pb.ResolveScreen(e.App, d, e)
 	return authz.Can(d, p, a, authz.Container(name))
 }
 
@@ -47,27 +47,27 @@ func requireManage(e *core.RequestEvent, r authz.Resource) error {
 	return pb.Check(pb.Default(), e, authz.ActionContainerManage, r)
 }
 
-// setKioskTokenCookie persists the validated ?token= as an HttpOnly cookie
-// scoped to the per-container kiosk prefix, so the iframe's sub-resource
+// setScreenTokenCookie persists the validated ?token= as an HttpOnly cookie
+// scoped to the per-container screen prefix, so the iframe's sub-resource
 // requests authenticate without anyone rewriting URLs. Path scoping means the
 // cookie isn't sent to unrelated PB endpoints; Secure is set whenever the
 // request arrived over TLS (directly or via a proxy's X-Forwarded-Proto) and
-// the cookie expires after kioskCookieMaxAge (PD-11).
-func setKioskTokenCookie(e *core.RequestEvent, path, token string) {
-	http.SetCookie(e.Response, kioskCookie(e.Request, path, token))
+// the cookie expires after screenCookieMaxAge (PD-11).
+func setScreenTokenCookie(e *core.RequestEvent, path, token string) {
+	http.SetCookie(e.Response, screenCookie(e.Request, path, token))
 }
 
-// kioskCookie builds the kiosk_token cookie for req (split out so the Secure
+// screenCookie builds the screen_token cookie for req (split out so the Secure
 // / MaxAge attributes are unit-testable without a RequestEvent).
-func kioskCookie(req *http.Request, path, token string) *http.Cookie {
+func screenCookie(req *http.Request, path, token string) *http.Cookie {
 	return &http.Cookie{
-		Name:     kioskTokenCookie,
+		Name:     screenTokenCookie,
 		Value:    token,
 		Path:     path,
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
 		Secure:   requestIsTLS(req),
-		MaxAge:   kioskCookieMaxAge,
+		MaxAge:   screenCookieMaxAge,
 	}
 }
 

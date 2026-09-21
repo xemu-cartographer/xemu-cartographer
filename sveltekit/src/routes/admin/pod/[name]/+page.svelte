@@ -341,7 +341,7 @@
 					<span class="font-semibold">View</span>
 				</div>
 				<p class="text-sm text-surface-700-300">
-					Kiosk noVNC stream + Xbox controller for live interaction.
+					Live screen (noVNC) + Xbox controller for live interaction.
 				</p>
 			</Card>
 		</a>

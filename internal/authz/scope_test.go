@@ -148,7 +148,7 @@ func TestScopeFor(t *testing.T) {
 	}{
 		{ActionOverlayListConsoles, Global(), "overlay.list_consoles"},
 		{ActionOverlayReadState, Instance("box1"), "overlay.read_state:box1"},
-		{ActionKioskView, Container("box1"), "kiosk.view:box1"},
+		{ActionBoxView, Container("box1"), "box.view:box1"},
 		{ActionRoomJoin, RoomRes(Room{Type: "host", Instance: "box1"}), "room.join:host:box1"},
 		{ActionRoomJoin, RoomRes(Room{Type: "host", Instance: "box1", Class: "tick"}), "room.join:host:box1:tick"},
 		{ActionRoomJoin, RoomRes(Room{Type: "host", Instance: "summary"}), "room.join:host:summary"},
@@ -176,7 +176,7 @@ func TestNamesOneInstance(t *testing.T) {
 		"room.join:host:box1",
 		"room.join:host:box1:tick",
 		"room.join:host:box1:*",
-		"kiosk.view:box1",
+		"box.view:box1",
 	}
 	no := []string{
 		"overlay.read_state:*",

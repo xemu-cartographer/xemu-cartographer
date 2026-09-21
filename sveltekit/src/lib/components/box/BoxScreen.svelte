@@ -41,7 +41,7 @@
 <div class="flex flex-col overflow-hidden card p-0 {extraClass}">
 	<div class="flex flex-none items-center justify-around gap-2 p-2 text-xs">
 		<span class="text-surface-600-400">
-			Kiosk view
+			Screen
 			<span class="ms-1 text-xs {vncConnected ? 'text-success-500' : 'text-surface-600-400'}">
 				{vncConnected ? '●' : running ? '…' : '○'}
 			</span>
@@ -104,12 +104,12 @@
 	</div>
 	{#if running}
 		{#key src}
-			<iframe {src} title="Kiosk view of {name}" class="aspect-4/3 w-full border-0" allowfullscreen
+			<iframe {src} title="Screen of {name}" class="aspect-4/3 w-full border-0" allowfullscreen
 			></iframe>
 		{/key}
 	{:else}
 		<div class="flex flex-1 items-center justify-center text-sm text-surface-600-400">
-			{loading ? 'Loading…' : 'Container not running. Press Start to launch the kiosk.'}
+			{loading ? 'Loading…' : 'Box not running. Press Start to bring up the screen.'}
 		</div>
 	{/if}
 </div>

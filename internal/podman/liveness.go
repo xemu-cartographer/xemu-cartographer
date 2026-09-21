@@ -8,23 +8,23 @@ import (
 	"time"
 )
 
-// defaultKioskLiveTimeout bounds the `podman inspect` liveness probe so a hung
-// or slow podman can't stall a kiosk request. Overridable via
-// Config.KioskLiveTimeout.
-const defaultKioskLiveTimeout = 2 * time.Second
+// defaultScreenLiveTimeout bounds the `podman inspect` liveness probe so a hung
+// or slow podman can't stall a screen request. Overridable via
+// Config.ScreenLiveTimeout.
+const defaultScreenLiveTimeout = 2 * time.Second
 
-// KioskLive reports whether the browser half of the named pair
+// ScreenLive reports whether the browser half of the named pair
 // (<name>-browser) is currently running.
 //
-// The kiosk reverse-proxy (routes/containers/proxy.go) uses this to fast-fail a
+// The screen reverse-proxy (routes/containers/proxy.go) uses this to fast-fail a
 // *recorded-but-dead* container instead of dialing a port nothing is listening
 // on and hanging the full dial-retry budget before surfacing as a 502. A
 // container that is unknown, "created", "exited", or absent from podman reads
 // as not-live; only "running" is live (a running-but-still-booting container
 // reads as live and the proxy's dial retry covers its nginx warm-up). Bounded
-// by an internal timeout (Config.KioskLiveTimeout, default 2s) so it can never
+// by an internal timeout (Config.ScreenLiveTimeout, default 2s) so it can never
 // itself become the thing that hangs.
-func (m *Manager) KioskLive(name string) bool {
+func (m *Manager) ScreenLive(name string) bool {
 	m.mu.Lock()
 	_, known := m.containers[name]
 	m.mu.Unlock()
@@ -40,11 +40,11 @@ func (m *Manager) KioskLive(name string) bool {
 
 // inspectStatus shells `podman inspect --format {{.State.Status}}` against a
 // specific container (a raw podman name, e.g. "<name>-browser"), bounded by the
-// configured kiosk-live timeout, and returns the parsed status string.
+// configured screen-live timeout, and returns the parsed status string.
 func (m *Manager) inspectStatus(target string) (string, error) {
-	timeout := m.cfg.KioskLiveTimeout
+	timeout := m.cfg.ScreenLiveTimeout
 	if timeout <= 0 {
-		timeout = defaultKioskLiveTimeout
+		timeout = defaultScreenLiveTimeout
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()

@@ -60,11 +60,11 @@ type Config struct {
 	// Default "qemu-img"; must be installed on the host running the server.
 	QemuImgCmd string
 
-	// KioskLiveTimeout bounds the `podman inspect` liveness probe that the
-	// kiosk reverse-proxy runs (Manager.KioskLive) before dialing a container's
-	// browser port. Keeps a hung podman from stalling a kiosk request. Zero
-	// falls back to defaultKioskLiveTimeout (2s).
-	KioskLiveTimeout time.Duration
+	// ScreenLiveTimeout bounds the `podman inspect` liveness probe that the
+	// screen reverse-proxy runs (Manager.ScreenLive) before dialing a container's
+	// browser port. Keeps a hung podman from stalling a screen request. Zero
+	// falls back to defaultScreenLiveTimeout (2s).
+	ScreenLiveTimeout time.Duration
 
 	// SetConsoleName, when true (default), writes the container name into the
 	// instance's Xbox console name (E:\UDATA\NICKNAME.XBN) inside its overlay at
@@ -78,9 +78,9 @@ type Config struct {
 	PythonCmd            string // default "python3"
 	FatxToolPath         string // default <InitDir>/../tools/fatx_console_name.py
 
-	// SetBrowserTrust, when true (default), pre-seeds the firefox kiosk profile's
+	// SetBrowserTrust, when true (default), pre-seeds the sidecar's Firefox profile's
 	// NSS trust store with the instance CA at create time (host certutil), so the
-	// kiosk loads xemu's HTTPS noVNC view without a "risky connection" warning on
+	// sidecar loads xemu's HTTPS noVNC view without a "risky connection" warning on
 	// first boot. Best-effort: skipped with a warning if certutil is unavailable
 	// on the host, in which case the bind-mounted policies.json belt
 	// (containers/browser/init/60-trust-xemu-cert.sh) is the fallback.
@@ -244,14 +244,14 @@ func (m *Manager) createWithOptions(name string, opts CreateOptions) (*Container
 		return nil, fmt.Errorf("generate ssl certs: %w", err)
 	}
 
-	// Pre-seed the firefox kiosk profile's NSS trust store with the instance CA
-	// on the host (certutil), so the kiosk loads xemu's HTTPS noVNC view without a
+	// Pre-seed the sidecar's Firefox profile's NSS trust store with the instance CA
+	// on the host (certutil), so the sidecar loads xemu's HTTPS noVNC view without a
 	// "risky connection" warning on first boot — the durable, verifiable trust
 	// path. Best-effort: a missing host certutil just falls back to the
 	// in-container policies.json belt (60-trust-xemu-cert.sh). See browser_cert.go.
 	if m.browserTrustEnabled() {
 		if err := m.provisionBrowserTrust(browserCfgDir, filepath.Join(sslDir, "ca.pem")); err != nil {
-			log.Printf("podman: warning: pre-seed firefox trust for %q failed (kiosk may show a TLS warning until the in-container policy applies): %v", name, err)
+			log.Printf("podman: warning: pre-seed firefox trust for %q failed (the sidecar may show a TLS warning until the in-container policy applies): %v", name, err)
 		}
 	}
 
@@ -452,7 +452,7 @@ func (m *Manager) createBrowser(name string, ports Ports, browserCfgDir string) 
 		height = 720
 	}
 	// Both containers run on `--network host`. xemu requires it for pcap
-	// netplay (binds to wlan0); the browser piggybacks so the kiosk Firefox
+	// netplay (binds to wlan0); the browser piggybacks so the sidecar Firefox
 	// can reach xemu via `localhost` without crossing podman's bridge →
 	// host firewall (which silently drops SYNs to host ports even with no
 	// firewalld running, courtesy of netavark's default rules).
@@ -465,7 +465,7 @@ func (m *Manager) createBrowser(name string, ports Ports, browserCfgDir string) 
 	// listens on a unix socket inside the container's namespace, even
 	// with `--network host`. Without `-ac`, the container restart-loops.
 	//
-	// Trade-off: the kiosk's WEB_LISTENING_PORT and VNC_LISTENING_PORT
+	// Trade-off: the sidecar's WEB_LISTENING_PORT and VNC_LISTENING_PORT
 	// listen on 0.0.0.0 on the host. Single-public-port goal is preserved
 	// at the host firewall layer for prod deploys; the JWT-gated reverse-
 	// proxy + WS relay (proxy.go, vnc.go) remain the only intended public
@@ -505,11 +505,11 @@ func (m *Manager) createBrowser(name string, ports Ports, browserCfgDir string) 
 		// has a stale .parentlock from a prior unclean shutdown, that handoff
 		// fires immediately on startup and KEEP_APP_RUNNING=1 below restarts
 		// it, producing an endless supervisor respawn loop and a black-screen
-		// kiosk view.
+		// screen view.
 		"-e", "FF_CUSTOM_ARGS=-no-remote",
 		"-e", "FF_PREF_AUTOPLAY=media.autoplay.default=0",
 		// Suppress Firefox first-run / session-restore / "set as default" prompts
-		// that otherwise overlay the kiosk on every restart.
+		// that otherwise overlay the sidecar on every restart.
 		"-e", "FF_PREF_DISABLE_RESUME_FROM_CRASH=browser.sessionstore.resume_from_crash=false",
 		"-e", "FF_PREF_DISABLE_MAX_RESUMED_CRASHES=browser.sessionstore.max_resumed_crashes=0",
 		"-e", "FF_PREF_DISABLE_SESSION_RESTORE=browser.sessionstore.resume_session_once=false",
@@ -528,7 +528,7 @@ func (m *Manager) createBrowser(name string, ports Ports, browserCfgDir string) 
 		"-v", fmt.Sprintf("%s:/config:rw", abs(browserCfgDir)),
 		// Read-only access to xemu's HTTPS cert. The cont-init script
 		// 60-trust-xemu-cert.sh imports this into Firefox's NSS DB
-		// (cert9.db) as a trusted root, so the kiosk loads
+		// (cert9.db) as a trusted root, so the sidecar loads
 		// https://localhost:<XemuHTTPS> without a cert warning.
 		"-v", fmt.Sprintf("%s:/xemu-cert:ro", abs(filepath.Join(m.cfg.ConfigsDir, name, "ssl"))),
 	}
@@ -775,7 +775,7 @@ func (m *Manager) NamePrefix() string { return m.cfg.NamePrefix }
 
 // List returns all managed containers from the persisted store. Note: this is
 // the recorded state only — it does NOT reflect live podman status. Callers
-// that need liveness must consult Status / KioskLive per container.
+// that need liveness must consult Status / ScreenLive per container.
 func (m *Manager) List() ([]ContainerInfo, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()

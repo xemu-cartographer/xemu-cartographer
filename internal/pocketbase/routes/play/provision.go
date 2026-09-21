@@ -87,7 +87,7 @@ type requestResponse struct {
 // scoped admin may pass an explicit name. Fails closed with 409 when that box
 // already exists (tear it down first), 503 when provisioning isn't wired
 // (CONTAINERS_ENABLED=false), 403 when the chosen ISO isn't player-available
-// or box.provision on it is denied. The admin kiosk/VNC path is untouched.
+// or box.provision on it is denied. The admin screen/VNC path is untouched.
 func registerRequest() {
 	Group.POST("/request", func(e *core.RequestEvent) error {
 		var body struct {

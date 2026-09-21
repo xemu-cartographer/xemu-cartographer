@@ -237,8 +237,8 @@ func TestWants(t *testing.T) {
 		t.Errorf("machine mint wants = %v", got)
 	}
 	// Plain rows want exactly ScopeFor.
-	if got := rules[ActionKioskView].wantsFor(ActionKioskView, Container("box1")); len(got) != 1 || got[0] != "kiosk.view:box1" {
-		t.Errorf("kiosk.view wants = %v", got)
+	if got := rules[ActionBoxView].wantsFor(ActionBoxView, Container("box1")); len(got) != 1 || got[0] != "box.view:box1" {
+		t.Errorf("box.view wants = %v", got)
 	}
 	// token.mint accepts only known token kinds.
 	for kind, ok := range map[string]bool{"machine": true, "spectator": true, "device": true, "": false, "pb_user": false, "MACHINE": false} {

@@ -211,27 +211,27 @@ func TestResolveWSTokenAndSpectator(t *testing.T) {
 	}
 }
 
-func TestResolveKiosk(t *testing.T) {
+func TestResolveScreen(t *testing.T) {
 	app, d := pbtest.NewApp(t)
-	user := pbtest.NewUser(t, app, "kiosk@test.dev")
+	user := pbtest.NewUser(t, app, "screen@test.dev")
 	jwt, _ := user.NewAuthToken()
 
-	e := newEvent(app, nil, http.MethodGet, "/api/admin/containers/xc-1/kiosk/", nil)
-	e.Request.AddCookie(&http.Cookie{Name: "kiosk_token", Value: jwt})
-	p, raw := pb.ResolveKiosk(app, d, e)
+	e := newEvent(app, nil, http.MethodGet, "/api/admin/containers/xc-1/screen/", nil)
+	e.Request.AddCookie(&http.Cookie{Name: "screen_token", Value: jwt})
+	p, raw := pb.ResolveScreen(app, d, e)
 	if p.Kind != authz.KindPBUser || raw != jwt {
 		t.Fatalf("cookie jwt: p=%+v raw=%q", p, raw)
 	}
 
-	_, dv := pbtest.MintToken(t, app, d, "device", []string{"kiosk.view:xc-1", "kiosk.input:xc-1"})
-	e = newEvent(app, nil, http.MethodGet, "/api/admin/containers/xc-1/kiosk/?token="+dv, nil)
-	p, raw = pb.ResolveKiosk(app, d, e)
+	_, dv := pbtest.MintToken(t, app, d, "device", []string{"box.view:xc-1", "box.drive:xc-1"})
+	e = newEvent(app, nil, http.MethodGet, "/api/admin/containers/xc-1/screen/?token="+dv, nil)
+	p, raw = pb.ResolveScreen(app, d, e)
 	if p.Kind != authz.KindDevice || p.BoundInstance() != "xc-1" || raw != dv {
 		t.Fatalf("device query: p=%+v raw=%q", p, raw)
 	}
 
-	e = newEvent(app, nil, http.MethodGet, "/api/admin/containers/xc-1/kiosk/?token=dv_bad.x", nil)
-	p, raw = pb.ResolveKiosk(app, d, e)
+	e = newEvent(app, nil, http.MethodGet, "/api/admin/containers/xc-1/screen/?token=dv_bad.x", nil)
+	p, raw = pb.ResolveScreen(app, d, e)
 	if p.Kind != authz.KindAnonymous || raw != "" {
 		t.Fatalf("bad device key must yield Nobody: p=%+v raw=%q", p, raw)
 	}

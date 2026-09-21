@@ -30,7 +30,7 @@ func TestBrowserProfileDir(t *testing.T) {
 
 // TestProvisionBrowserTrustImportsCA runs the real host certutil path end to
 // end: generate an instance CA + leaf (the exact chain nginx serves — see
-// cert.go), pre-seed the kiosk profile's NSS DB with the CA, then confirm NSS
+// cert.go), pre-seed the sidecar profile's NSS DB with the CA, then confirm NSS
 // validates the leaf for TLS server auth. That last step IS Firefox's cert
 // check: if it passes, a Firefox reading this profile accepts xemu's HTTPS cert
 // with no "risky connection" interstitial.
@@ -78,7 +78,7 @@ func TestProvisionBrowserTrustImportsCA(t *testing.T) {
 		t.Fatalf("import leaf: %v: %s", err, out)
 	}
 	if out, err := exec.Command(certutil, "-V", "-u", "V", "-n", "itest-leaf", "-d", dbDir).CombinedOutput(); err != nil {
-		t.Fatalf("NSS rejected xemu leaf for TLS server auth (kiosk would show a warning): %v: %s", err, out)
+		t.Fatalf("NSS rejected xemu leaf for TLS server auth (the sidecar would show a warning): %v: %s", err, out)
 	}
 }
 

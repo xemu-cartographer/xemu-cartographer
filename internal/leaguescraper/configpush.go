@@ -265,7 +265,7 @@ func (p *ConfigPusher) instanceConfigs(app core.App) map[string]daemon.InstanceC
 }
 
 // InstanceConfig derives one container's daemon config (§10): overlay path
-// when provisioned, the kiosk websockify URL, the host-drive marker verdict
+// when provisioned, the screen websockify URL, the host-drive marker verdict
 // and the catalog offset set of its attached ISO. NeutralHost is filled by
 // Document (it needs the containers collection).
 func (p *ConfigPusher) InstanceConfig(info podman.ContainerInfo) daemon.InstanceConfig {
@@ -296,7 +296,7 @@ func (p *ConfigPusher) instanceConfig(app core.App, info podman.ContainerInfo) d
 	return ic
 }
 
-// VNCURLForPort is the kiosk websockify URL for a container's BrowserWeb
+// VNCURLForPort is the screen websockify URL for a container's BrowserWeb
 // port (the host-runner URL resolver's format).
 func VNCURLForPort(browserWeb int) string {
 	return fmt.Sprintf("ws://127.0.0.1:%d/websockify", browserWeb)

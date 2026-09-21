@@ -238,7 +238,7 @@ func TestCanMatrix(t *testing.T) {
 		{"overlay.read_state/spectator/scope+pred:bound-true", d, spectator(boxA, "overlay.read_state:box1"), authz.ActionOverlayReadState, authz.Instance(boxA), true, "pred:bound"},
 		{"overlay.read_state/spectator/scope+pred:bound-false", d, spectator(boxB, "overlay.read_state:box1"), authz.ActionOverlayReadState, authz.Instance(boxA), false, "pred:bound"},
 		{"overlay.read_state/device/scope+pred:bound-true", d, device(boxA, "overlay.read_state:box1"), authz.ActionOverlayReadState, authz.Instance(boxA), true, "pred:bound"},
-		{"overlay.read_state/device/scope+pred:no-scope", d, device(boxA, "kiosk.view:box1"), authz.ActionOverlayReadState, authz.Instance(boxA), false, "no_scope"},
+		{"overlay.read_state/device/scope+pred:no-scope", d, device(boxA, "box.view:box1"), authz.ActionOverlayReadState, authz.Instance(boxA), false, "no_scope"},
 		{"overlay.read_state/anonymous/scope+pred:bound-true", d, authz.Anonymous(boxA, anonScopes), authz.ActionOverlayReadState, authz.Instance(boxA), true, "pred:bound"},
 		{"overlay.read_state/anonymous/scope+pred:bound-false", d, authz.Anonymous(boxB, anonScopes), authz.ActionOverlayReadState, authz.Instance(boxA), false, "pred:bound"},
 		{"overlay.read_state/anonymous/scope+pred:unbound", d, authz.Anonymous("", anonScopes), authz.ActionOverlayReadState, authz.Instance(boxA), false, "pred:bound"},
@@ -254,27 +254,27 @@ func TestCanMatrix(t *testing.T) {
 		{"overlay.mint/pb_user/scope", d, user(authz.SeedRoles[3].Scopes...), authz.ActionOverlayMint, authz.Global(), true, "scope:overlay.mint"},
 		{"overlay.mint/pb_user/scope-none", d, user("overlay.read_state:*"), authz.ActionOverlayMint, authz.Global(), false, "no_scope"},
 		{"overlay.mint/machine/scope", d, machine("overlay.*"), authz.ActionOverlayMint, authz.Global(), true, "scope:overlay.*"},
-		{"overlay.mint/device/kind", d, device(boxA, "kiosk.view:box1"), authz.ActionOverlayMint, authz.Global(), false, "kind"},
+		{"overlay.mint/device/kind", d, device(boxA, "box.view:box1"), authz.ActionOverlayMint, authz.Global(), false, "kind"},
 
-		// ---- kiosk.view / kiosk.input / box.read ----
-		{"kiosk.view/pb_user/scope", d, adminUser(), authz.ActionKioskView, authz.Container(boxA), true, "scope:kiosk.*"},
-		{"kiosk.view/pb_user/pred:rostered-true", rosteredDeps(), user(), authz.ActionKioskView, authz.Container(boxA), true, "pred:rostered"},
-		{"kiosk.view/pb_user/pred:rostered-false", rosteredDeps(), user(), authz.ActionKioskView, authz.Container(boxB), false, "pred:rostered|box_owner"},
-		{"kiosk.view/pb_user/pred:box_owner-true", ownerDeps(), user(), authz.ActionKioskView, authz.Container(boxA), true, "pred:box_owner"},
-		{"kiosk.view/machine/kind", d, machine("*"), authz.ActionKioskView, authz.Container(boxA), false, "kind"},
-		{"kiosk.view/spectator/kind", d, spectator(boxA, "overlay.read_state:box1"), authz.ActionKioskView, authz.Container(boxA), false, "kind"},
-		{"kiosk.view/device/scope+pred:bound-true", d, device(boxA, "kiosk.view:box1"), authz.ActionKioskView, authz.Container(boxA), true, "pred:bound"},
-		{"kiosk.view/device/scope+pred:bound-false", d, device(boxB, "kiosk.view:box1"), authz.ActionKioskView, authz.Container(boxA), false, "pred:bound"},
-		{"kiosk.view/device/scope+pred:bound-case-fold", d, device(boxA, "kiosk.view:box1"), authz.ActionKioskView, authz.Container("Box1"), true, "pred:bound"},
-		{"kiosk.view/pb_user/pred:box_owner-case-fold", ownerDeps(), user(), authz.ActionKioskView, authz.Container("BOX1"), true, "pred:box_owner"},
-		{"kiosk.view/device/scope+pred:no-scope", d, device(boxA, "kiosk.input:box1"), authz.ActionKioskView, authz.Container(boxA), false, "no_scope"},
-		{"kiosk.view/anonymous/kind", d, authz.Anonymous(boxA, anonScopes), authz.ActionKioskView, authz.Container(boxA), false, "kind"},
-		{"kiosk.input/pb_user/scope", d, adminUser(), authz.ActionKioskInput, authz.Container(boxA), true, "scope:kiosk.*"},
-		{"kiosk.input/pb_user/pred:rostered-true", rosteredDeps(), user(), authz.ActionKioskInput, authz.Container(boxA), true, "pred:rostered"},
-		{"kiosk.input/pb_user/pred:box_owner-false", ownerDeps(), user(), authz.ActionKioskInput, authz.Container(boxB), false, "pred:rostered|box_owner"},
-		{"kiosk.input/device/scope+pred:bound-true", d, device(boxA, "kiosk.input:box1"), authz.ActionKioskInput, authz.Container(boxA), true, "pred:bound"},
-		{"kiosk.input/device/scope+pred:bound-false", d, device(boxB, "kiosk.input:box1"), authz.ActionKioskInput, authz.Container(boxA), false, "pred:bound"},
-		{"kiosk.input/machine/kind", d, machine("*"), authz.ActionKioskInput, authz.Container(boxA), false, "kind"},
+		// ---- box.view / box.drive / box.read ----
+		{"box.view/pb_user/scope", d, adminUser(), authz.ActionBoxView, authz.Container(boxA), true, "scope:box.*"},
+		{"box.view/pb_user/pred:rostered-true", rosteredDeps(), user(), authz.ActionBoxView, authz.Container(boxA), true, "pred:rostered"},
+		{"box.view/pb_user/pred:rostered-false", rosteredDeps(), user(), authz.ActionBoxView, authz.Container(boxB), false, "pred:rostered|box_owner"},
+		{"box.view/pb_user/pred:box_owner-true", ownerDeps(), user(), authz.ActionBoxView, authz.Container(boxA), true, "pred:box_owner"},
+		{"box.view/machine/kind", d, machine("*"), authz.ActionBoxView, authz.Container(boxA), false, "kind"},
+		{"box.view/spectator/kind", d, spectator(boxA, "overlay.read_state:box1"), authz.ActionBoxView, authz.Container(boxA), false, "kind"},
+		{"box.view/device/scope+pred:bound-true", d, device(boxA, "box.view:box1"), authz.ActionBoxView, authz.Container(boxA), true, "pred:bound"},
+		{"box.view/device/scope+pred:bound-false", d, device(boxB, "box.view:box1"), authz.ActionBoxView, authz.Container(boxA), false, "pred:bound"},
+		{"box.view/device/scope+pred:bound-case-fold", d, device(boxA, "box.view:box1"), authz.ActionBoxView, authz.Container("Box1"), true, "pred:bound"},
+		{"box.view/pb_user/pred:box_owner-case-fold", ownerDeps(), user(), authz.ActionBoxView, authz.Container("BOX1"), true, "pred:box_owner"},
+		{"box.view/device/scope+pred:no-scope", d, device(boxA, "box.drive:box1"), authz.ActionBoxView, authz.Container(boxA), false, "no_scope"},
+		{"box.view/anonymous/kind", d, authz.Anonymous(boxA, anonScopes), authz.ActionBoxView, authz.Container(boxA), false, "kind"},
+		{"box.drive/pb_user/scope", d, adminUser(), authz.ActionBoxDrive, authz.Container(boxA), true, "scope:box.*"},
+		{"box.drive/pb_user/pred:rostered-true", rosteredDeps(), user(), authz.ActionBoxDrive, authz.Container(boxA), true, "pred:rostered"},
+		{"box.drive/pb_user/pred:box_owner-false", ownerDeps(), user(), authz.ActionBoxDrive, authz.Container(boxB), false, "pred:rostered|box_owner"},
+		{"box.drive/device/scope+pred:bound-true", d, device(boxA, "box.drive:box1"), authz.ActionBoxDrive, authz.Container(boxA), true, "pred:bound"},
+		{"box.drive/device/scope+pred:bound-false", d, device(boxB, "box.drive:box1"), authz.ActionBoxDrive, authz.Container(boxA), false, "pred:bound"},
+		{"box.drive/machine/kind", d, machine("*"), authz.ActionBoxDrive, authz.Container(boxA), false, "kind"},
 		{"box.read/pb_user/scope", d, adminUser(), authz.ActionBoxRead, authz.Container(boxA), true, "scope:box.*"},
 		{"box.read/pb_user/pred:rostered-true", rosteredDeps(), user(), authz.ActionBoxRead, authz.Container(boxA), true, "pred:rostered"},
 		{"box.read/pb_user/pred:box_owner-true", ownerDeps(), user(), authz.ActionBoxRead, authz.Container(boxA), true, "pred:box_owner"},
@@ -598,8 +598,8 @@ func TestCanOrder(t *testing.T) {
 	t.Run("4 scope beats predicate", func(t *testing.T) {
 		d := baseDeps()
 		d.RosteredInFunc = func(string, string) bool { return false }
-		got := authz.CanWith(d, user("kiosk.view:*"), authz.ActionKioskView, authz.Container(boxA))
-		if !got.Allow || got.Reason != "scope:kiosk.view:*" || got.Matched != "kiosk.view:*" {
+		got := authz.CanWith(d, user("box.view:*"), authz.ActionBoxView, authz.Container(boxA))
+		if !got.Allow || got.Reason != "scope:box.view:*" || got.Matched != "box.view:*" {
 			t.Fatalf("got %+v", got)
 		}
 	})
@@ -607,13 +607,13 @@ func TestCanOrder(t *testing.T) {
 		d := baseDeps()
 		calls := 0
 		d.RosteredInFunc = func(u, inst string) bool { calls++; return u == uID && inst == boxA }
-		got := authz.CanWith(d, user(), authz.ActionKioskView, authz.Container(boxA))
+		got := authz.CanWith(d, user(), authz.ActionBoxView, authz.Container(boxA))
 		if !got.Allow || got.Reason != "pred:rostered" || calls != 1 {
 			t.Fatalf("got %+v (calls=%d)", got, calls)
 		}
 		calls = 0
-		got = authz.CanWith(d, user("kiosk.*"), authz.ActionKioskView, authz.Container(boxA))
-		if !got.Allow || got.Reason != "scope:kiosk.*" || calls != 0 {
+		got = authz.CanWith(d, user("box.*"), authz.ActionBoxView, authz.Container(boxA))
+		if !got.Allow || got.Reason != "scope:box.*" || calls != 0 {
 			t.Fatalf("scope matched but predicate ran: %+v (calls=%d)", got, calls)
 		}
 	})
@@ -796,7 +796,7 @@ func sampleResources(a authz.Action) []authz.Resource {
 func TestCanFailsClosed(t *testing.T) {
 	var nilFake *authztest.FakeDeps
 	for _, deps := range []authz.Deps{nil, nilFake} {
-		got := authz.CanWith(deps, adminUser(), authz.ActionKioskView, authz.Container(boxA))
+		got := authz.CanWith(deps, adminUser(), authz.ActionBoxView, authz.Container(boxA))
 		if got.Allow || got.Reason != "no_deps" {
 			t.Fatalf("nil deps: %+v", got)
 		}
@@ -814,8 +814,8 @@ func TestCanFailsClosed(t *testing.T) {
 		a authz.Action
 		r authz.Resource
 	}{
-		{authz.ActionKioskView, authz.Instance(boxA)},
-		{authz.ActionKioskView, authz.Global()},
+		{authz.ActionBoxView, authz.Instance(boxA)},
+		{authz.ActionBoxView, authz.Global()},
 		{authz.ActionRoomJoin, authz.Global()},
 		{authz.ActionRoomJoin, authz.Instance(boxA)},
 		{authz.ActionRoleRevoke, authz.User("u2")},
@@ -881,11 +881,11 @@ func TestCanFailsClosed(t *testing.T) {
 	if authz.Can(d, spectator(boxA, "*"), authz.ActionRoomJoin, hostClass(boxB, "tick")) {
 		t.Fatal("spectator with * must stay bound")
 	}
-	if authz.Can(d, device(boxA, "*"), authz.ActionKioskView, authz.Container(boxB)) {
+	if authz.Can(d, device(boxA, "*"), authz.ActionBoxView, authz.Container(boxB)) {
 		t.Fatal("device with * must stay bound")
 	}
-	if authz.Can(d, authz.Anonymous(boxA, []string{"*"}), authz.ActionKioskView, authz.Container(boxA)) {
-		t.Fatal("anonymous is never admitted to kiosk.view")
+	if authz.Can(d, authz.Anonymous(boxA, []string{"*"}), authz.ActionBoxView, authz.Container(boxA)) {
+		t.Fatal("anonymous is never admitted to box.view")
 	}
 }
 

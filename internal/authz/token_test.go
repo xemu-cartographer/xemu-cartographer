@@ -197,9 +197,9 @@ func TestValidateForMint(t *testing.T) {
 		{"spectator", []string{"overlay.read_state:box1", "room.join:host:box2:tick"}, ErrSpectatorInstance},                     // 7
 		{"spectator", []string{"room.join:host:box1"}, ErrSpectatorInstance},                                                     // 8
 		{"spectator", []string{"token.mint"}, ErrScopeSyntax},                                                                    // 9
-		{"device", []string{"kiosk.view:box1", "kiosk.input:box1"}, nil},                                                         // 10
-		{"device", []string{"kiosk.*:box1"}, ErrWildcardKind},                                                                    // 11
-		{"device", []string{"kiosk.view:box1", "box.read:box2"}, ErrSpectatorInstance},                                           // 12
+		{"device", []string{"box.view:box1", "box.drive:box1"}, nil},                                                             // 10
+		{"device", []string{"box.*:box1"}, ErrWildcardKind},                                                                      // 11
+		{"device", []string{"box.view:box1", "box.read:box2"}, ErrSpectatorInstance},                                             // 12
 		{"machine", []string{}, ErrScopeSyntax},                                                                                  // 13
 		{"bogus", []string{"*"}, ErrScopeSyntax},                                                                                 // 14
 	}
@@ -241,7 +241,7 @@ func TestValidateForMint(t *testing.T) {
 		{"device room bare", "device", []string{"room.join:host:box1"}, ErrSpectatorInstance},
 		{"device room class ok", "device", []string{"room.join:host:box1:tick", "box.read:box1"}, nil},
 		{"device not in allow-list", "device", []string{"overlay.read_state:box1"}, ErrScopeSyntax},
-		{"spectator not in allow-list", "spectator", []string{"kiosk.view:box1"}, ErrScopeSyntax},
+		{"spectator not in allow-list", "spectator", []string{"box.view:box1"}, ErrScopeSyntax},
 		{"spectator bare star", "spectator", []string{"*"}, ErrWildcardKind},
 	}
 	for _, c := range extra {
@@ -299,7 +299,7 @@ func TestOverlayMintCovers(t *testing.T) {
 		"room.*",
 		"scraper.state:box1",
 		"scraper.events:box1",
-		"kiosk.view:box1",
+		"box.view:box1",
 		"token.mint:spectator",
 		"*",
 		"Room.Join:host:box1:tick", // ParseScope is case-sensitive; Mint lowercases first
@@ -343,7 +343,7 @@ func TestPrincipalFromToken(t *testing.T) {
 		t.Fatalf("mixed spectator bound = %q, want none", got)
 	}
 
-	device := TokenRow{Kid: "dv_1", Kind: "device", Container: "box7", Scopes: []string{"kiosk.view:box7"}}
+	device := TokenRow{Kid: "dv_1", Kind: "device", Container: "box7", Scopes: []string{"box.view:box7"}}
 	if got := PrincipalFromToken(device); got.Kind != KindDevice || got.BoundInstance() != "box7" {
 		t.Fatalf("device principal = %+v", got)
 	}
