@@ -3,7 +3,7 @@ import { loginAsAdmin } from '../helpers/auth';
 import { installPodMocks, MOCK_INSTANCE_LIVE } from '../helpers/mocks';
 import { screenshotPodRoute } from '../helpers/screenshot';
 
-test('unit-3-pod-view: /admin/pod/[name]/view/ renders kiosk + controller + start/stop', async ({
+test('unit-3-pod-view: /admin/pod/[name]/view/ renders screen + controller + start/stop', async ({
 	page
 }) => {
 	await installPodMocks(page);

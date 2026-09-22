@@ -12,7 +12,7 @@ import (
 	"testing"
 )
 
-// makeResp builds a minimal *http.Response for rewriteKioskHTML to chew on.
+// makeResp builds a minimal *http.Response for rewriteScreenHTML to chew on.
 func makeResp(body []byte, gzipped bool) *http.Response {
 	h := make(http.Header)
 	h.Set("Content-Type", "text/html; charset=utf-8")
@@ -52,11 +52,11 @@ func readBody(t *testing.T, resp *http.Response) string {
 
 func TestInjectBaseHrefPlain(t *testing.T) {
 	resp := makeResp([]byte("<html><head><title>k</title></head><body>x</body></html>"), false)
-	if err := rewriteKioskHTML(resp, "/api/admin/containers/alpha/kiosk/"); err != nil {
+	if err := rewriteScreenHTML(resp, "/api/admin/containers/alpha/screen/"); err != nil {
 		t.Fatalf("inject: %v", err)
 	}
 	got := readBody(t, resp)
-	if !strings.Contains(got, `<base href="/api/admin/containers/alpha/kiosk/">`) {
+	if !strings.Contains(got, `<base href="/api/admin/containers/alpha/screen/">`) {
 		t.Errorf("missing <base> tag: %q", got)
 	}
 	if !strings.Contains(got, "<title>k</title>") {
@@ -66,7 +66,7 @@ func TestInjectBaseHrefPlain(t *testing.T) {
 
 func TestInjectBaseHrefGzipped(t *testing.T) {
 	resp := makeResp([]byte("<html><head></head><body></body></html>"), true)
-	if err := rewriteKioskHTML(resp, "/p/"); err != nil {
+	if err := rewriteScreenHTML(resp, "/p/"); err != nil {
 		t.Fatalf("inject: %v", err)
 	}
 	got := readBody(t, resp)
@@ -78,7 +78,7 @@ func TestInjectBaseHrefGzipped(t *testing.T) {
 func TestInjectBaseHrefNoHead(t *testing.T) {
 	// HTML without an explicit <head> — the helper should splice one in.
 	resp := makeResp([]byte("<html><body>hi</body></html>"), false)
-	if err := rewriteKioskHTML(resp, "/p/"); err != nil {
+	if err := rewriteScreenHTML(resp, "/p/"); err != nil {
 		t.Fatalf("inject: %v", err)
 	}
 	got := readBody(t, resp)
@@ -87,13 +87,13 @@ func TestInjectBaseHrefNoHead(t *testing.T) {
 	}
 }
 
-// TestKioskCookieSecureAndMaxAge pins the PD-11 cookie attributes: the
-// kiosk_token cookie is HttpOnly + SameSite=Lax, expires after 12h, and is
+// TestScreenCookieSecureAndMaxAge pins the PD-11 cookie attributes: the
+// screen_token cookie is HttpOnly + SameSite=Lax, expires after 12h, and is
 // Secure whenever the request came in over TLS — directly or through a
 // reverse proxy declaring X-Forwarded-Proto: https — but not over plain HTTP
 // (dev: Vite → PB on localhost).
-func TestKioskCookieSecureAndMaxAge(t *testing.T) {
-	const path = "/api/admin/containers/pod1/kiosk/"
+func TestScreenCookieSecureAndMaxAge(t *testing.T) {
+	const path = "/api/admin/containers/pod1/screen/"
 
 	plain := httptest.NewRequest(http.MethodGet, "http://pb.local"+path+"?token=abc", nil)
 	forwarded := httptest.NewRequest(http.MethodGet, "http://pb.local"+path+"?token=abc", nil)
@@ -118,8 +118,8 @@ func TestKioskCookieSecureAndMaxAge(t *testing.T) {
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			ck := kioskCookie(c.req, path, "abc")
-			if ck.Name != kioskTokenCookie || ck.Value != "abc" || ck.Path != path {
+			ck := screenCookie(c.req, path, "abc")
+			if ck.Name != screenTokenCookie || ck.Value != "abc" || ck.Path != path {
 				t.Fatalf("cookie identity = %s=%s path=%s", ck.Name, ck.Value, ck.Path)
 			}
 			if ck.Secure != c.wantSecure {
@@ -140,7 +140,7 @@ func TestKioskCookieSecureAndMaxAge(t *testing.T) {
 	// The serialized Set-Cookie header carries the attributes (what the
 	// browser actually sees).
 	rec := httptest.NewRecorder()
-	http.SetCookie(rec, kioskCookie(forwarded, path, "abc"))
+	http.SetCookie(rec, screenCookie(forwarded, path, "abc"))
 	got := rec.Header().Get("Set-Cookie")
 	for _, want := range []string{"Max-Age=43200", "Secure", "HttpOnly", "SameSite=Lax", "Path=" + path} {
 		if !strings.Contains(got, want) {
@@ -149,15 +149,15 @@ func TestKioskCookieSecureAndMaxAge(t *testing.T) {
 	}
 }
 
-// upstreamSeen is what a fake kiosk container recorded of the last request
+// upstreamSeen is what a fake sidecar container recorded of the last request
 // the proxy forwarded to it.
 type upstreamSeen struct {
 	path, query, cookie, authorization, apiKey, host string
 }
 
-// upstreamRecorder is the handler of a fake kiosk container: it counts the
+// upstreamRecorder is the handler of a fake sidecar container: it counts the
 // requests the proxy forwarded and keeps the last one (mutex-guarded — the
-// httptest server answers on its own goroutine) and answers 200 "kiosk".
+// httptest server answers on its own goroutine) and answers 200 "screen".
 type upstreamRecorder struct {
 	mu   sync.Mutex
 	hits int
@@ -176,7 +176,7 @@ func (u *upstreamRecorder) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		host:          r.Host,
 	}
 	u.mu.Unlock()
-	_, _ = w.Write([]byte("kiosk"))
+	_, _ = w.Write([]byte("screen"))
 }
 
 // seen returns the forwarded-request count and the last request recorded.
@@ -186,7 +186,7 @@ func (u *upstreamRecorder) seen() (int, upstreamSeen) {
 	return u.hits, u.last
 }
 
-// newRecordingUpstream starts an httptest server standing in for a kiosk
+// newRecordingUpstream starts an httptest server standing in for a sidecar
 // container's web UI and returns it with its recorder and parsed URL.
 func newRecordingUpstream(t *testing.T) (*upstreamRecorder, *url.URL) {
 	t.Helper()
@@ -200,27 +200,27 @@ func newRecordingUpstream(t *testing.T) (*upstreamRecorder, *url.URL) {
 	return rec, target
 }
 
-// TestKioskProxyStripsCredential pins that the reverse proxy never forwards
+// TestScreenProxyStripsCredential pins that the reverse proxy never forwards
 // the caller's credential to the container: the ?token= query parameter, the
-// kiosk_token cookie and the REST carriers are removed from the upstream
+// screen_token cookie and the REST carriers are removed from the upstream
 // request while the rest of the query and the other cookies pass through,
 // and the path is rebased under the prefix.
-func TestKioskProxyStripsCredential(t *testing.T) {
+func TestScreenProxyStripsCredential(t *testing.T) {
 	up, target := newRecordingUpstream(t)
-	const prefix = "/api/admin/containers/pod1/kiosk"
+	const prefix = "/api/admin/containers/pod1/screen"
 
 	req := httptest.NewRequest(http.MethodGet, "http://pb.local"+prefix+"/app/ui.js?token=secret-jwt&x=1", nil)
 	req.Header.Set("Authorization", "Bearer secret-jwt")
 	req.Header.Set("X-Api-Key", "mk_secret")
 	req.AddCookie(&http.Cookie{Name: "theme", Value: "dark"})
-	req.AddCookie(&http.Cookie{Name: kioskTokenCookie, Value: "secret-jwt"})
+	req.AddCookie(&http.Cookie{Name: screenTokenCookie, Value: "secret-jwt"})
 	req.AddCookie(&http.Cookie{Name: "pb_auth", Value: "keep"})
 	rec := httptest.NewRecorder()
 
-	newKioskProxy(target, prefix).ServeHTTP(rec, req)
+	newScreenProxy(target, prefix).ServeHTTP(rec, req)
 
-	if rec.Code != http.StatusOK || rec.Body.String() != "kiosk" {
-		t.Fatalf("proxy response = %d %q, want 200 \"kiosk\"", rec.Code, rec.Body.String())
+	if rec.Code != http.StatusOK || rec.Body.String() != "screen" {
+		t.Fatalf("proxy response = %d %q, want 200 \"screen\"", rec.Code, rec.Body.String())
 	}
 	_, seen := up.seen()
 	if seen.path != "/app/ui.js" {
@@ -230,7 +230,7 @@ func TestKioskProxyStripsCredential(t *testing.T) {
 		t.Errorf("upstream query = %q, want x=1 (token stripped)", seen.query)
 	}
 	if seen.cookie != "theme=dark; pb_auth=keep" {
-		t.Errorf("upstream cookie = %q, want the non-kiosk cookies only", seen.cookie)
+		t.Errorf("upstream cookie = %q, want the non-screen cookies only", seen.cookie)
 	}
 	if seen.authorization != "" || seen.apiKey != "" {
 		t.Errorf("upstream got Authorization=%q X-Api-Key=%q, want neither", seen.authorization, seen.apiKey)
@@ -243,7 +243,7 @@ func TestKioskProxyStripsCredential(t *testing.T) {
 	// header invented, query preserved verbatim).
 	req = httptest.NewRequest(http.MethodGet, "http://pb.local"+prefix+"/?b=2&a=1", nil)
 	rec = httptest.NewRecorder()
-	newKioskProxy(target, prefix).ServeHTTP(rec, req)
+	newScreenProxy(target, prefix).ServeHTTP(rec, req)
 	_, seen = up.seen()
 	if rec.Code != http.StatusOK || seen.path != "/" || seen.query != "b=2&a=1" || seen.cookie != "" {
 		t.Errorf("bare request forwarded as %+v (status %d)", seen, rec.Code)

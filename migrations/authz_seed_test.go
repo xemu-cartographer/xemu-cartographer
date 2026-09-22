@@ -72,7 +72,7 @@ func TestSeedAnonymousMatchesDecisions(t *testing.T) {
 	}
 	// The raw game / event / objects / debug rooms must stay closed to the
 	// console door.
-	for _, closed := range []string{"room.join:host:box1:game", "room.join:host:box1:event", "room.join:host:box1:objects", "room.join:host:box1:debug", "room.join:host:box1", "room.join:host:summary", "kiosk.view:box1"} {
+	for _, closed := range []string{"room.join:host:box1:game", "room.join:host:box1:event", "room.join:host:box1:objects", "room.join:host:box1:debug", "room.join:host:box1", "room.join:host:summary", "box.view:box1"} {
 		if _, hit := authz.MatchAny(r.Scopes, closed); hit {
 			t.Errorf("anonymous seed grants %q", closed)
 		}

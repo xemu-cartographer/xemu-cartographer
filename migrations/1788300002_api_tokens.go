@@ -7,7 +7,7 @@ import (
 
 // Authz step 1 (design §5.2): `api_tokens` holds every non-user credential —
 // machine keys (`mk_…`, LAN stations / host runners), spectator keys (`sp_…`,
-// overlay browser sources) and device keys (`dv_…`, kiosk tablets). Only the
+// overlay browser sources) and device keys (`dv_…`, station tablets). Only the
 // sha256 of the secret is stored; the secret itself is shown once at mint.
 //
 // All API rules are nil on purpose: minting, listing and revoking go through

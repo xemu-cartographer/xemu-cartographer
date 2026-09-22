@@ -38,16 +38,19 @@ func LoadFromEnv() Config {
 		// in sync with DEFAULT_HDD_NAME in containers/xemu/init/.env.
 		RootHDD:    envStr("CONTAINERS_ROOT_HDD", "_default.qcow2"),
 		QemuImgCmd: envStr("CONTAINERS_QEMU_IMG_CMD", "qemu-img"),
-		// Liveness-probe timeout for the kiosk proxy's pre-dial `podman inspect`.
-		KioskLiveTimeout: time.Duration(envInt("CONTAINERS_KIOSK_LIVE_TIMEOUT_MS", 2000)) * time.Millisecond,
+		// Liveness-probe timeout for the screen proxy's pre-dial `podman inspect`.
+		// The pre-rename CONTAINERS_KIOSK_* name is still honoured as a fallback so
+		// a deployed .env keeps working; drop the alias when the sidecar goes.
+		ScreenLiveTimeout: time.Duration(envInt("CONTAINERS_SCREEN_LIVE_TIMEOUT_MS",
+			envInt("CONTAINERS_KIOSK_LIVE_TIMEOUT_MS", 2000))) * time.Millisecond,
 		// Write the container name into the instance's Xbox console name
 		// (E:\UDATA\NICKNAME.XBN) inside its overlay at create time.
 		SetConsoleName:       envBool("CONTAINERS_SET_CONSOLE_NAME", true),
 		QemuStorageDaemonCmd: envStr("CONTAINERS_QEMU_STORAGE_DAEMON_CMD", "qemu-storage-daemon"),
 		PythonCmd:            envStr("CONTAINERS_PYTHON_CMD", "python3"),
 		FatxToolPath:         envStr("CONTAINERS_FATX_TOOL", ""),
-		// Pre-seed the firefox kiosk profile's NSS trust store with the instance
-		// CA at create time so the kiosk loads xemu's HTTPS view without a warning.
+		// Pre-seed the sidecar's Firefox profile's NSS trust store with the instance
+		// CA at create time so the sidecar loads xemu's HTTPS view without a warning.
 		SetBrowserTrust:  envBool("CONTAINERS_SET_BROWSER_TRUST", true),
 		CertutilCmd:      envStr("CONTAINERS_CERTUTIL_CMD", "certutil"),
 		Encoder:          envStr("CONTAINERS_ENCODER", "x264enc"),

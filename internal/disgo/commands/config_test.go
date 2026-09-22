@@ -22,7 +22,7 @@ func TestBootstrapChannelSpec(t *testing.T) {
 	spec := bootstrapChannelSpec()
 	want := map[string]string{
 		"container-status": discordcfg.HookContainerStatus,
-		"kiosk-links":      discordcfg.HookKioskLinks,
+		"play-links":       discordcfg.HookPlayLinks,
 		"announcements":    discordcfg.HookAnnouncements,
 		"bot-log":          discordcfg.HookBotLog,
 	}
@@ -77,9 +77,9 @@ func TestDiffTags(t *testing.T) {
 	})
 
 	t.Run("remove hook that pointed here", func(t *testing.T) {
-		plan := diffTags(map[string]string{"bot_log": here, "kiosk_links": other}, here, nil)
+		plan := diffTags(map[string]string{"bot_log": here, "play_links": other}, here, nil)
 		if len(plan.toDelete) != 1 || plan.toDelete[0] != "bot_log" {
-			t.Errorf("toDelete = %v, want [bot_log] (kiosk_links points elsewhere, untouched)", plan.toDelete)
+			t.Errorf("toDelete = %v, want [bot_log] (play_links points elsewhere, untouched)", plan.toDelete)
 		}
 		if len(plan.toSet) != 0 {
 			t.Errorf("toSet = %v, want []", plan.toSet)

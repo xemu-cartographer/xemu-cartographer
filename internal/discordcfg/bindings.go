@@ -17,7 +17,7 @@ import (
 const (
 	HookCategory        = "category"         // structural parent /config bootstrap nests channels under
 	HookContainerStatus = "container_status" // live "who's playing"
-	HookKioskLinks      = "kiosk_links"      // per-player play/kiosk links
+	HookPlayLinks       = "play_links"       // per-player play links
 	HookAnnouncements   = "announcements"    // results / tournament posts (folded from the old results_channel)
 	HookTournament      = "tournament"       // tournament posts (folded from the old tournament_channel)
 	HookBotLog          = "bot_log"          // bot ops log
@@ -28,7 +28,7 @@ const (
 // Discord category, not a text channel you tag).
 var PostHooks = []string{
 	HookContainerStatus,
-	HookKioskLinks,
+	HookPlayLinks,
 	HookAnnouncements,
 	HookTournament,
 	HookBotLog,
@@ -38,7 +38,7 @@ var PostHooks = []string{
 var hookLabels = map[string]string{
 	HookCategory:        "Category (structural)",
 	HookContainerStatus: "Container status",
-	HookKioskLinks:      "Kiosk links",
+	HookPlayLinks:       "Play links",
 	HookAnnouncements:   "Announcements / results",
 	HookTournament:      "Tournament posts",
 	HookBotLog:          "Bot log",

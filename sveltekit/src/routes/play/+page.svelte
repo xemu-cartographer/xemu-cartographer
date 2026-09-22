@@ -10,7 +10,7 @@
 	//   live     → live scoreboard                    (WS host:<inst>:game/tick/scenario)
 	//   postgame → final scores → back to lobby       (WS host:<inst>:previous_game)
 	//
-	// Sibling to — never reusing — the admin kiosk/VNC path (routes/containers).
+	// Sibling to — never reusing — the admin screen/VNC path (routes/containers).
 	import { onMount, onDestroy } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { Gamepad2Icon, LoaderIcon, PowerOffIcon } from '@lucide/svelte';

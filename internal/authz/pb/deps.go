@@ -1,6 +1,6 @@
 // Package pb is the PocketBase adapter for internal/authz: it implements
 // authz.Deps over the live app + scraper manager + provisioner (PBDeps),
-// resolves principals from HTTP / WebSocket / kiosk carriers, and wraps the
+// resolves principals from HTTP / WebSocket / screen-proxy carriers, and wraps the
 // role and api_tokens mutations with their audit rows (design §6).
 //
 // Import direction: internal/roles and internal/guards import this package,
@@ -117,7 +117,7 @@ func (d *PBDeps) Now() time.Time { return time.Now() }
 
 // RosteredIn implements authz.Deps: the user's usable gamertags (A.2) ∩ the
 // instance's live identity set with the rostergrace TTL — the same ladder
-// join_room / the kiosk proxy / the play resolver use today.
+// join_room / the screen proxy / the play resolver use today.
 func (d *PBDeps) RosteredIn(userID, instance string) bool {
 	if d == nil || d.app == nil || d.scraper == nil || userID == "" || instance == "" {
 		return false

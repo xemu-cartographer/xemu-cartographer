@@ -6,8 +6,8 @@
 	import { apiBaseURL, wsBaseURL } from '$lib/utils/api-base';
 	import { auth } from '$lib/stores/auth.svelte';
 	import { confirmToast, toastPromise, toaster } from '$lib/stores/toaster';
-	import KioskFrame from '$lib/components/kiosk/KioskFrame.svelte';
-	import XboxController from '$lib/components/kiosk/XboxController.svelte';
+	import BoxScreen from '$lib/components/box/BoxScreen.svelte';
+	import XboxController from '$lib/components/box/XboxController.svelte';
 	import { VNCKeyboard } from '$lib/utils/vnc-keyboard';
 	import type { ContainerDetail, ContainerStatus } from '$lib/types/containers';
 
@@ -25,7 +25,7 @@
 	let vnc: VNCKeyboard | null = null;
 	let vncConnected = $state(false);
 
-	let kioskSrc = $state('');
+	let screenSrc = $state('');
 	let detailTimer: ReturnType<typeof setInterval> | null = null;
 
 	const isRunning = $derived(status === 'running');
@@ -409,9 +409,9 @@
 		return `${wsBaseURL()}/api/admin/containers/${encodeURIComponent(name)}/vnc?token=${encodeURIComponent(auth.token ?? '')}`;
 	}
 
-	function kioskURL(): string {
+	function screenURL(): string {
 		if (!detail) return '';
-		return `${apiBaseURL()}/api/admin/containers/${encodeURIComponent(name)}/kiosk/?token=${encodeURIComponent(auth.token ?? '')}`;
+		return `${apiBaseURL()}/api/admin/containers/${encodeURIComponent(name)}/screen/?token=${encodeURIComponent(auth.token ?? '')}`;
 	}
 
 	function connectVNC() {
@@ -520,14 +520,14 @@
 
 	// Bind the iframe src when running, without tracking auth.token — PB's
 	// authStore syncs across tabs via the `storage` event, so a reactive read
-	// would rewrite src on every cross-tab token rotation and KioskFrame's
+	// would rewrite src on every cross-tab token rotation and BoxScreen's
 	// {#key src} would tear down the noVNC session.
 	$effect(() => {
 		if (!detail || !isRunning) {
-			kioskSrc = '';
+			screenSrc = '';
 			return;
 		}
-		kioskSrc = untrack(() => kioskURL());
+		screenSrc = untrack(() => screenURL());
 	});
 
 	onMount(async () => {
@@ -617,13 +617,13 @@
 	{:else}
 		<div class="flex flex-col gap-3 lg:grid lg:grid-cols-[2fr_1fr] lg:gap-4">
 			<div class="sticky top-0 z-10 lg:static lg:z-auto">
-				<KioskFrame
+				<BoxScreen
 					{name}
-					src={kioskSrc}
+					src={screenSrc}
 					running={isRunning}
 					{loading}
 					{vncConnected}
-					externalHref={detail ? kioskURL() : undefined}
+					externalHref={detail ? screenURL() : undefined}
 				/>
 			</div>
 

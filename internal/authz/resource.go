@@ -9,7 +9,7 @@ type ResourceKind string
 const (
 	ResGlobal    ResourceKind = "global"    // selectorless actions (overlay.list_consoles, container.list, token.list, library.manage)
 	ResInstance  ResourceKind = "instance"  // scraper runner / container name (same namespace)
-	ResContainer ResourceKind = "container" // kiosk/box actions; ID = container name
+	ResContainer ResourceKind = "container" // box actions; ID = container name
 	ResRoom      ResourceKind = "room"
 	ResUser      ResourceKind = "user"     // ID = users.id
 	ResRole      ResourceKind = "role"     // ID = roles.slug; Extra["target_user"] for grant/revoke
@@ -78,7 +78,7 @@ func Global() Resource { return Resource{Kind: ResGlobal} }
 // Instance addresses a scraper runner / container by name.
 func Instance(name string) Resource { return Resource{Kind: ResInstance, ID: name} }
 
-// Container addresses a container by name (kiosk / box actions).
+// Container addresses a container by name (box actions).
 func Container(name string) Resource { return Resource{Kind: ResContainer, ID: name} }
 
 // RoomRes wraps a parsed Room.

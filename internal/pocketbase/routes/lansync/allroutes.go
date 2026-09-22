@@ -12,7 +12,7 @@
 //     the client consumes (shape reconciled against the client session).
 //   - GET /api/lan/sync/games/{id}/download
 //   - GET /api/lan/sync/apps/{id}/download
-//     kiosk-scoped pulls of the derived EXTRACTED trees for a game (iso) / app.
+//     station-scoped pulls of the derived EXTRACTED trees for a game (iso) / app.
 //     (Profiles + gametypes already have /api/lan/saves — this group adds only
 //     games + apps.)
 //

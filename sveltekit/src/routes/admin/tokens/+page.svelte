@@ -48,7 +48,7 @@
 		spectator:
 			'OBS browser sources. No wildcards; every scope must name the same one instance (overlay.read_state:<inst>, room.join:host:<inst>:<class>).',
 		device:
-			'Kiosk boxes. No wildcards; every scope must name the same one container (kiosk.view:<name>, kiosk.input:<name>).'
+			'Station hardware bound to one box. No wildcards; every scope must name the same one container (box.view:<name>, box.drive:<name>).'
 	};
 
 	let rows = $state<TokenRow[]>([]);
@@ -171,7 +171,7 @@
 			mintScopes = spectatorScopesFor(inst).join('\n');
 		} else if (mintKind === 'device') {
 			const c = inst.toLowerCase();
-			mintScopes = [`kiosk.view:${c}`, `kiosk.input:${c}`].join('\n');
+			mintScopes = [`box.view:${c}`, `box.drive:${c}`].join('\n');
 			if (!mintContainer.trim()) mintContainer = inst;
 		}
 	}
@@ -274,7 +274,7 @@
 <div class="mx-auto flex max-w-6xl flex-col gap-4 sm:gap-6">
 	<PageHeader
 		title="API tokens"
-		description="Opaque keys for things that aren't a signed-in browser: machine keys for LAN clients, spectator keys for OBS browser sources, device keys for kiosk boxes. Each key carries its own scopes; the secret is shown once at mint and never again."
+		description="Opaque keys for things that aren't a signed-in browser: machine keys for LAN clients, spectator keys for OBS browser sources, device keys for stations (tablets, headless LAN pulls). Each key carries its own scopes; the secret is shown once at mint and never again."
 	/>
 
 	{#if revealed}
@@ -296,7 +296,7 @@
 				This is the only time the secret is shown. Store it where the client reads it (the LAN
 				client's
 				<code>Authorization: Bearer</code> header, the OBS source URL's <code>?spectator=</code>,
-				the kiosk's <code>?token=</code>). Losing it means minting a new key.
+				the screen's <code>?token=</code>). Losing it means minting a new key.
 			</p>
 			<div class="flex items-center gap-2">
 				<code class="input flex-1 overflow-x-auto font-mono text-xs break-all select-all"
@@ -476,7 +476,7 @@
 			loading={loading && visible.length === 0}
 			emptyMessage={filter || kindFilter
 				? 'No keys match.'
-				: 'No keys yet. Mint one for a LAN client, an OBS source or a kiosk.'}
+				: 'No keys yet. Mint one for a LAN client, an OBS source or a station.'}
 		/>
 	</Card>
 </div>
@@ -559,7 +559,7 @@
 					? 'lan.*'
 					: mintKind === 'spectator'
 						? 'overlay.read_state:box1\nroom.join:host:box1:game_filtered'
-						: 'kiosk.view:box1\nkiosk.input:box1'}
+						: 'box.view:box1\nbox.drive:box1'}
 				disabled={mintBusy}
 			></textarea>
 		</label>

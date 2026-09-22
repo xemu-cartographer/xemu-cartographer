@@ -20,9 +20,9 @@ var ErrBanned = errors.New("authz: account banned or deleted")
 // credential at all.
 var ErrNoCredential = errors.New("authz: no credential presented")
 
-// kioskCookie is the cookie the kiosk proxy uses to carry the token through
+// screenCookie is the cookie the screen proxy uses to carry the token through
 // the iframe's sub-resource requests (containers/auth.go).
-const kioskCookie = "kiosk_token"
+const screenCookie = "screen_token"
 
 // principalKey is the request-store key ResolveRequest / AuthorizeLAN save
 // the principal under (Get reads it).
@@ -287,11 +287,11 @@ func resolveJWT(app core.App, d *PBDeps, token string) (authz.Principal, error) 
 	return principalFromVerifiedAuth(app, d, rec)
 }
 
-// ResolveKiosk resolves the kiosk proxy's carrier — ?token= or the
-// kiosk_token cookie, holding a PB JWT or an opaque (device) key — and
+// ResolveScreen resolves the screen proxy's carrier — ?token= or the
+// screen_token cookie, holding a PB JWT or an opaque (device) key — and
 // returns the raw token so the caller can re-set the cookie. Any failure
 // yields Nobody and "".
-func ResolveKiosk(app core.App, d *PBDeps, e *core.RequestEvent) (authz.Principal, string) {
+func ResolveScreen(app core.App, d *PBDeps, e *core.RequestEvent) (authz.Principal, string) {
 	if e == nil || e.Request == nil {
 		return authz.Nobody(), ""
 	}
@@ -300,7 +300,7 @@ func ResolveKiosk(app core.App, d *PBDeps, e *core.RequestEvent) (authz.Principa
 	}
 	raw := strings.TrimSpace(e.Request.URL.Query().Get("token"))
 	if raw == "" {
-		if c, err := e.Request.Cookie(kioskCookie); err == nil {
+		if c, err := e.Request.Cookie(screenCookie); err == nil {
 			raw = strings.TrimSpace(c.Value)
 		}
 	}

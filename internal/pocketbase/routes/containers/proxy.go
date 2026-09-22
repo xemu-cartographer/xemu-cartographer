@@ -1,9 +1,9 @@
 package containers
 
-// HTTP reverse-proxy that fronts the jlesage/firefox kiosk container's web UI.
+// HTTP reverse-proxy that fronts the jlesage/firefox sidecar container's web UI.
 //
 // Why a proxy instead of direct port access:
-//   - The kiosk's HTTP port (browser_web) and VNC port (browser_vnc) are bound
+//   - The sidecar's HTTP port (browser_web) and VNC port (browser_vnc) are bound
 //     to 127.0.0.1 only (see internal/podman/podman.go:createBrowser). Direct
 //     access from a browser doesn't work over the internet.
 //   - All traffic flows through PocketBase's :8090, which is the single port
@@ -37,22 +37,22 @@ import (
 )
 
 func init() {
-	register(registerKioskProxy)
+	register(registerScreenProxy)
 }
 
-// Kiosk dial-retry tuning, read once at register time (OnServe, after any .env
-// is in the process environment). kioskDialBudget bounds the total time the
+// Screen dial-retry tuning, read once at register time (OnServe, after any .env
+// is in the process environment). screenDialBudget bounds the total time the
 // reverse proxy spends retrying the TCP dial to a *running-but-booting* browser
 // container (nginx/s6-overlay take a few seconds to accept connections after
-// `podman start`). kioskPerDialTimeout bounds each individual attempt so a
+// `podman start`). screenPerDialTimeout bounds each individual attempt so a
 // filtered/silently-dropped port can't stall a single dial past the budget.
 // Defaults preserve the historical ~10s boot-race window.
 var (
-	kioskDialBudget     = 10 * time.Second
-	kioskPerDialTimeout = 3 * time.Second
+	screenDialBudget     = 10 * time.Second
+	screenPerDialTimeout = 3 * time.Second
 )
 
-func registerKioskProxy() {
+func registerScreenProxy() {
 	// Mounted directly on se.Router (NOT on Group) so we can authenticate
 	// via ?token= rather than the Authorization header — iframes cannot
 	// set headers on their own requests.
@@ -60,33 +60,35 @@ func registerKioskProxy() {
 		return
 	}
 
-	if d := envDurationMS("CONTAINERS_KIOSK_DIAL_TIMEOUT_MS"); d > 0 {
-		kioskDialBudget = d
+	// The pre-rename CONTAINERS_KIOSK_* names are still honoured as fallbacks so
+	// a deployed .env keeps working; drop the aliases when the sidecar goes.
+	if d := envDurationMS("CONTAINERS_SCREEN_DIAL_TIMEOUT_MS", "CONTAINERS_KIOSK_DIAL_TIMEOUT_MS"); d > 0 {
+		screenDialBudget = d
 	}
-	if d := envDurationMS("CONTAINERS_KIOSK_PER_DIAL_TIMEOUT_MS"); d > 0 {
-		kioskPerDialTimeout = d
+	if d := envDurationMS("CONTAINERS_SCREEN_PER_DIAL_TIMEOUT_MS", "CONTAINERS_KIOSK_PER_DIAL_TIMEOUT_MS"); d > 0 {
+		screenPerDialTimeout = d
 	}
 
-	Router.GET("/api/admin/containers/{name}/kiosk/{path...}", handleKioskProxy)
-	Router.HEAD("/api/admin/containers/{name}/kiosk/{path...}", handleKioskProxy)
-	Router.POST("/api/admin/containers/{name}/kiosk/{path...}", handleKioskProxy)
+	Router.GET("/api/admin/containers/{name}/screen/{path...}", handleScreenProxy)
+	Router.HEAD("/api/admin/containers/{name}/screen/{path...}", handleScreenProxy)
+	Router.POST("/api/admin/containers/{name}/screen/{path...}", handleScreenProxy)
 
-	// Bare `/kiosk` (no trailing slash) — redirect to `/kiosk/` so the
+	// Bare `/screen` (no trailing slash) — redirect to `/screen/` so the
 	// browser sees a stable origin path and the base-href works.
-	Router.GET("/api/admin/containers/{name}/kiosk", func(e *core.RequestEvent) error {
+	Router.GET("/api/admin/containers/{name}/screen", func(e *core.RequestEvent) error {
 		name := e.Request.PathValue("name")
 		http.Redirect(e.Response, e.Request,
-			"/api/admin/containers/"+url.PathEscape(name)+"/kiosk/",
+			"/api/admin/containers/"+url.PathEscape(name)+"/screen/",
 			http.StatusFound)
 		return nil
 	})
 }
 
-func handleKioskProxy(e *core.RequestEvent) error {
+func handleScreenProxy(e *core.RequestEvent) error {
 	name := e.Request.PathValue("name")
-	// kiosk.view on this container: a scoped principal, the box owner, a
+	// box.view on this container: a scoped principal, the box owner, a
 	// player rostered in it, or a device key bound to it (rule table).
-	if !authorizeKioskAccess(e, name, authz.ActionKioskView) {
+	if !authorizeBoxAccess(e, name, authz.ActionBoxView) {
 		return e.JSON(http.StatusForbidden, map[string]string{"error": "forbidden"})
 	}
 
@@ -99,10 +101,10 @@ func handleKioskProxy(e *core.RequestEvent) error {
 	// container that is *recorded* but *not running* passes the Get() existence
 	// check (existence ≠ liveness); without this gate it would get dialed on a
 	// dead port and hang the full ~10s dial-retry budget before surfacing as a
-	// 502. KioskLive fast-fails that case with a clean 503 the browser can
+	// 502. ScreenLive fast-fails that case with a clean 503 the browser can
 	// render immediately; a running-but-still-booting container reads as live
 	// and the dial retry below covers its nginx warm-up.
-	if !Manager.KioskLive(name) {
+	if !Manager.ScreenLive(name) {
 		return e.JSON(http.StatusServiceUnavailable, map[string]string{"error": "container not running"})
 	}
 
@@ -110,7 +112,7 @@ func handleKioskProxy(e *core.RequestEvent) error {
 	// HttpOnly cookie so the iframe's sub-resource fetches (CSS/JS/images/
 	// /websockify) authenticate without anyone rewriting URLs.
 	if t := e.Request.URL.Query().Get("token"); t != "" {
-		setKioskTokenCookie(e, "/api/admin/containers/"+url.PathEscape(name)+"/kiosk/", t)
+		setScreenTokenCookie(e, "/api/admin/containers/"+url.PathEscape(name)+"/screen/", t)
 	}
 
 	// PB's default security headers middleware sets X-Frame-Options: SAMEORIGIN
@@ -124,17 +126,17 @@ func handleKioskProxy(e *core.RequestEvent) error {
 		Scheme: "http",
 		Host:   "127.0.0.1:" + strconv.Itoa(info.Ports.BrowserWeb),
 	}
-	prefix := "/api/admin/containers/" + url.PathEscape(name) + "/kiosk"
+	prefix := "/api/admin/containers/" + url.PathEscape(name) + "/screen"
 
-	newKioskProxy(target, prefix).ServeHTTP(e.Response, e.Request)
+	newScreenProxy(target, prefix).ServeHTTP(e.Response, e.Request)
 	return nil
 }
 
-// newKioskProxy builds the reverse proxy for one container's web UI: requests
+// newScreenProxy builds the reverse proxy for one container's web UI: requests
 // under prefix are rewritten onto target with the prefix stripped, the
-// caller's credential removed (stripKioskCredential), and HTML responses
+// caller's credential removed (stripScreenCredential), and HTML responses
 // rebased under the prefix.
-func newKioskProxy(target *url.URL, prefix string) *httputil.ReverseProxy {
+func newScreenProxy(target *url.URL, prefix string) *httputil.ReverseProxy {
 	return &httputil.ReverseProxy{
 		Director: func(req *http.Request) {
 			req.URL.Scheme = target.Scheme
@@ -145,13 +147,13 @@ func newKioskProxy(target *url.URL, prefix string) *httputil.ReverseProxy {
 				req.URL.Path = "/"
 			}
 			req.Host = target.Host
-			stripKioskCredential(req)
+			stripScreenCredential(req)
 		},
 		// The browser container's HTTP listener (s6-overlay → nginx) takes
 		// several seconds to come up after `podman start`. Without a retry,
 		// the user's first iframe load races that boot and gets a 502.
 		Transport: &http.Transport{
-			DialContext: newDialWithRetry(kioskDialBudget, kioskPerDialTimeout),
+			DialContext: newDialWithRetry(screenDialBudget, screenPerDialTimeout),
 		},
 		ModifyResponse: func(resp *http.Response) error {
 			// Drop framing restrictions from upstream too — same reason as
@@ -163,19 +165,19 @@ func newKioskProxy(target *url.URL, prefix string) *httputil.ReverseProxy {
 			if !strings.HasPrefix(ct, "text/html") {
 				return nil
 			}
-			return rewriteKioskHTML(resp, prefix+"/")
+			return rewriteScreenHTML(resp, prefix+"/")
 		},
 	}
 }
 
-// stripKioskCredential removes the caller's credential from the outbound
+// stripScreenCredential removes the caller's credential from the outbound
 // upstream request before the proxy forwards it: the ?token= query parameter,
-// the kiosk_token cookie (every other cookie is kept as sent) and the REST
-// carriers (Authorization / X-Api-Key). The kiosk container never needs the
-// credential — authorizeKioskAccess already admitted the request — and
+// the screen_token cookie (every other cookie is kept as sent) and the REST
+// carriers (Authorization / X-Api-Key). The sidecar container never needs the
+// credential — authorizeBoxAccess already admitted the request — and
 // forwarding it would hand a bearer credential to whatever the container
 // process serves.
-func stripKioskCredential(req *http.Request) {
+func stripScreenCredential(req *http.Request) {
 	if q := req.URL.Query(); q.Has("token") {
 		q.Del("token")
 		req.URL.RawQuery = q.Encode()
@@ -188,7 +190,7 @@ func stripKioskCredential(req *http.Request) {
 	}
 	req.Header.Del("Cookie")
 	for _, c := range cookies {
-		if c.Name != kioskTokenCookie {
+		if c.Name != screenTokenCookie {
 			req.AddCookie(c)
 		}
 	}
@@ -202,7 +204,7 @@ func stripKioskCredential(req *http.Request) {
 // Once the listener is up, the first attempt succeeds with no measurable
 // overhead.
 //
-// The liveness gate in handleKioskProxy means we only reach here for a
+// The liveness gate in handleScreenProxy means we only reach here for a
 // container podman reports as running, so this retry now only ever smooths a
 // genuine boot race — never a recorded-but-dead container.
 func newDialWithRetry(budget, perDial time.Duration) func(context.Context, string, string) (net.Conn, error) {
@@ -226,33 +228,37 @@ func newDialWithRetry(budget, perDial time.Duration) func(context.Context, strin
 	}
 }
 
-// envDurationMS reads an integer-milliseconds env var into a time.Duration,
-// returning 0 when unset/empty/invalid so callers keep their default.
-func envDurationMS(key string) time.Duration {
-	v, ok := os.LookupEnv(key)
-	if !ok || v == "" {
-		return 0
+// envDurationMS reads the first set integer-milliseconds env var among keys
+// into a time.Duration, returning 0 when none is set (or the first set one is
+// empty/invalid) so callers keep their default.
+func envDurationMS(keys ...string) time.Duration {
+	for _, key := range keys {
+		v, ok := os.LookupEnv(key)
+		if !ok || v == "" {
+			continue
+		}
+		n, err := strconv.Atoi(v)
+		if err != nil || n < 0 {
+			return 0
+		}
+		return time.Duration(n) * time.Millisecond
 	}
-	n, err := strconv.Atoi(v)
-	if err != nil || n < 0 {
-		return 0
-	}
-	return time.Duration(n) * time.Millisecond
+	return 0
 }
 
 // permissionsPolyfillScript wraps navigator.permissions.query so Firefox stops
 // throwing TypeError on unknown permission names like 'clipboard-write' (a
 // Chromium-only enum). noVNC's RFB constructor probes that name and the
-// rejection floods the kiosk console on every load. Returning a denied
+// rejection floods the sidecar console on every load. Returning a denied
 // PermissionStatus-shaped object matches Chromium's behavior. Chromium itself
 // is a no-op since it doesn't throw on the same query.
 const permissionsPolyfillScript = `<script>(function(){var p=navigator.permissions;if(!p||!p.query)return;var orig=p.query.bind(p);p.query=function(d){try{return orig(d).catch(function(e){if(e&&e.name==='TypeError')return{state:'denied',onchange:null};throw e;});}catch(e){if(e&&e.name==='TypeError')return Promise.resolve({state:'denied',onchange:null});return Promise.reject(e);}};})();</script>`
 
-// rewriteKioskHTML splices a <base href> tag and the permissions polyfill into
-// the kiosk's HTML <head>. The base href makes the upstream's relative asset
+// rewriteScreenHTML splices a <base href> tag and the permissions polyfill into
+// the sidecar's HTML <head>. The base href makes the upstream's relative asset
 // paths resolve under our proxy prefix; the polyfill silences a Firefox-only
 // noVNC console error. Handles gzip transparently and rewrites Content-Length.
-func rewriteKioskHTML(resp *http.Response, base string) error {
+func rewriteScreenHTML(resp *http.Response, base string) error {
 	var (
 		body []byte
 		err  error
@@ -262,17 +268,17 @@ func rewriteKioskHTML(resp *http.Response, base string) error {
 	if gzipped {
 		gr, err := gzip.NewReader(resp.Body)
 		if err != nil {
-			return fmt.Errorf("kiosk proxy: gzip reader: %w", err)
+			return fmt.Errorf("screen proxy: gzip reader: %w", err)
 		}
 		body, err = io.ReadAll(gr)
 		_ = gr.Close()
 		if err != nil {
-			return fmt.Errorf("kiosk proxy: gzip read: %w", err)
+			return fmt.Errorf("screen proxy: gzip read: %w", err)
 		}
 	} else {
 		body, err = io.ReadAll(resp.Body)
 		if err != nil {
-			return fmt.Errorf("kiosk proxy: read body: %w", err)
+			return fmt.Errorf("screen proxy: read body: %w", err)
 		}
 	}
 	_ = resp.Body.Close()
@@ -293,10 +299,10 @@ func rewriteKioskHTML(resp *http.Response, base string) error {
 		var buf bytes.Buffer
 		gw := gzip.NewWriter(&buf)
 		if _, err := gw.Write(body); err != nil {
-			return fmt.Errorf("kiosk proxy: gzip write: %w", err)
+			return fmt.Errorf("screen proxy: gzip write: %w", err)
 		}
 		if err := gw.Close(); err != nil {
-			return fmt.Errorf("kiosk proxy: gzip close: %w", err)
+			return fmt.Errorf("screen proxy: gzip close: %w", err)
 		}
 		body = buf.Bytes()
 	}

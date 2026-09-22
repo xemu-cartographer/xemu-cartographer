@@ -25,9 +25,9 @@ const (
 	ActionOverlayListConsoles Action = "overlay.list_consoles" // ResGlobal
 	ActionOverlayMint         Action = "overlay.mint"          // ResGlobal (mint spectator keys)
 
-	// Kiosk / box / containers
-	ActionKioskView         Action = "kiosk.view"          // ResContainer
-	ActionKioskInput        Action = "kiosk.input"         // ResContainer
+	// Box: screen (view/drive) + lifecycle
+	ActionBoxView           Action = "box.view"            // ResContainer
+	ActionBoxDrive          Action = "box.drive"           // ResContainer
 	ActionBoxRead           Action = "box.read"            // ResContainer
 	ActionBoxControl        Action = "box.control"         // ResContainer
 	ActionBoxTeardown       Action = "box.teardown"        // ResContainer
@@ -97,8 +97,8 @@ var allActions = []Action{
 	ActionOverlayReadState,
 	ActionOverlayListConsoles,
 	ActionOverlayMint,
-	ActionKioskView,
-	ActionKioskInput,
+	ActionBoxView,
+	ActionBoxDrive,
 	ActionBoxRead,
 	ActionBoxControl,
 	ActionBoxTeardown,

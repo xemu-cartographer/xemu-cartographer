@@ -17,7 +17,7 @@ import (
 // stream (player intents, emitted keys, native box/team counts) to the admin WS
 // room. It reads svc.WS lazily at Emit time, so it's safe to construct the
 // registry before the hub is populated (the shared *Services pointer pattern).
-// Each event is wrapped in a "host_runner"-typed Message so the admin kiosk can
+// Each event is wrapped in a "host_runner"-typed Message so the admin screen can
 // filter it from other admin-room traffic.
 func newHostRunnerSink(svc *guards.Services) hostrunner.SinkFunc {
 	return func(ev hostrunner.RunnerEvent) {

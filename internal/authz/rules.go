@@ -138,7 +138,7 @@ func tokenMintWants(a Action, r Resource) []string {
 var (
 	rowScopeUser        = map[Kind]kindRule{KindPBUser: cellS}
 	rowScopeUserMachine = map[Kind]kindRule{KindPBUser: cellS, KindMachine: cellS}
-	rowKioskBox         = map[Kind]kindRule{KindPBUser: cellRostered, KindDevice: cellBound}
+	rowBoxAccess        = map[Kind]kindRule{KindPBUser: cellRostered, KindDevice: cellBound}
 	rowBoxOwner         = map[Kind]kindRule{KindPBUser: cellBoxOwner}
 	rowRole             = map[Kind]kindRule{KindPBUser: {Mode: modeScopeAndPred, Pred: predLevelOK}}
 	rowTeam             = map[Kind]kindRule{KindPBUser: {Mode: modeScopeOrPred, Pred: predTeamAuthority}}
@@ -161,10 +161,10 @@ var rules = map[Action]rule{
 	ActionOverlayReadState:    {Resources: []ResourceKind{ResInstance}, Kinds: map[Kind]kindRule{KindPBUser: cellS, KindMachine: cellS, KindSpectator: cellBound, KindDevice: cellBound, KindAnonymous: cellBound}},
 	ActionOverlayListConsoles: {Resources: []ResourceKind{ResGlobal}, Kinds: rowScopeUserMachine},
 	ActionOverlayMint:         {Resources: []ResourceKind{ResGlobal}, Kinds: rowScopeUserMachine},
-	// Kiosk / box / containers
-	ActionKioskView:         {Resources: []ResourceKind{ResContainer}, Kinds: rowKioskBox},
-	ActionKioskInput:        {Resources: []ResourceKind{ResContainer}, Kinds: rowKioskBox},
-	ActionBoxRead:           {Resources: []ResourceKind{ResContainer}, Kinds: rowKioskBox},
+	// Box: screen (view/drive) + lifecycle
+	ActionBoxView:           {Resources: []ResourceKind{ResContainer}, Kinds: rowBoxAccess},
+	ActionBoxDrive:          {Resources: []ResourceKind{ResContainer}, Kinds: rowBoxAccess},
+	ActionBoxRead:           {Resources: []ResourceKind{ResContainer}, Kinds: rowBoxAccess},
 	ActionBoxControl:        {Resources: []ResourceKind{ResContainer}, Kinds: rowBoxOwner},
 	ActionBoxTeardown:       {Resources: []ResourceKind{ResContainer}, Kinds: rowBoxOwner},
 	ActionBoxProvision:      {Resources: []ResourceKind{ResISO}, Kinds: map[Kind]kindRule{KindPBUser: {Mode: modePred, Pred: predAuthed}}},

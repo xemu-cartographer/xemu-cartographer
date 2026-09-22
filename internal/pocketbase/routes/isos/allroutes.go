@@ -9,7 +9,7 @@
 // both roles — remove it from a row to lock policy edits to admins). The route
 // path keeps its historical /api/admin/ prefix — renaming it would churn every
 // client for no behavioral gain. The player-scoped picker lives in routes/play
-// (GET /api/play/isos + POST /api/play/request); the admin kiosk + VNC path
+// (GET /api/play/isos + POST /api/play/request); the admin screen + VNC path
 // (routes/containers) is untouched.
 //
 // Under the ingest model the catalog is not a scan of arbitrary files: each

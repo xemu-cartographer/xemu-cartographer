@@ -1,7 +1,7 @@
 // Package pbtest builds a PocketBase test app carrying the collections the
 // authz adapter (internal/authz/pb) reads and writes, wired to a *pb.PBDeps
 // with a stubbable scraper. The pb tests use it; the later slices (WS guards,
-// kiosk proxy, LAN routes) reuse it so they don't each redeclare the schema.
+// screen proxy, LAN routes) reuse it so they don't each redeclare the schema.
 //
 // Typical use:
 //

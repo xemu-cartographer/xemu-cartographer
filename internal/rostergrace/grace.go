@@ -1,7 +1,7 @@
 // Package rostergrace adds a sliding grace window to the M09 roster-membership
 // access gate. Editing a gametype (or any transient lobby churn) can briefly
 // drop a gamertag from a container's live roster; without leeway that instantly
-// revokes the player's kiosk/VNC + WS access and kicks them off mid-edit. The
+// revokes the player's screen/VNC + WS access and kicks them off mid-edit. The
 // tracker remembers, per (container, gamertag), the last time the gamertag was
 // actually seen in the container's roster, and keeps access valid for a TTL
 // after presence lapses.
@@ -13,7 +13,7 @@
 //
 // SECURITY NOTE: this is a deliberate, Stewart-requested usability/security
 // trade-off (M09). For up to the TTL after a gamertag leaves a container's
-// roster, that user can still reach the container's kiosk/VNC + live WS data.
+// roster, that user can still reach the container's screen/VNC + live WS data.
 // Revocation is intentionally not instant. Keep the window short.
 package rostergrace
 
@@ -29,7 +29,7 @@ import (
 // construct a Tracker with New) to adjust the leeway.
 const DefaultTTL = 5 * time.Minute
 
-// Default is the process-wide tracker shared by the kiosk/VNC proxy and the WS
+// Default is the process-wide tracker shared by the screen/VNC proxy and the WS
 // join_room gate, so a live sighting on either surface keeps both alive.
 var Default = New(DefaultTTL)
 

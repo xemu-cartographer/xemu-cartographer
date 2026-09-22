@@ -1,8 +1,8 @@
 package containers
 
-// WebSocket relay for the kiosk's keyboard-only VNC sidecar.
+// WebSocket relay for the sidecar's keyboard-only VNC.
 //
-// Targets the same /websockify endpoint as the kiosk HTTP proxy (nginx on
+// Targets the same /websockify endpoint as the screen HTTP proxy (nginx on
 // browser_web → /tmp/vnc.sock). NOT the raw RFB TCP port (browser_vnc):
 // that listener speaks RFB only and rejects HTTP Upgrade requests, which
 // trips Xvnc's brute-force blacklist after a handful of reconnect attempts.
@@ -35,10 +35,10 @@ func registerVNCRelay() {
 
 func handleVNCRelay(e *core.RequestEvent) error {
 	name := e.Request.PathValue("name")
-	// kiosk.input on this container: same per-container gate as the kiosk
+	// box.drive on this container: same per-container gate as the screen
 	// HTTP proxy but the input verb — a player rostered in this container may
 	// drive their own controller.
-	if !authorizeKioskAccess(e, name, authz.ActionKioskInput) {
+	if !authorizeBoxAccess(e, name, authz.ActionBoxDrive) {
 		return e.JSON(http.StatusForbidden, map[string]string{"error": "forbidden"})
 	}
 
@@ -47,10 +47,10 @@ func handleVNCRelay(e *core.RequestEvent) error {
 		return e.JSON(http.StatusNotFound, map[string]string{"error": "container not found"})
 	}
 
-	// Same liveness gate as the kiosk HTTP proxy: fast-fail a recorded-but-dead
+	// Same liveness gate as the screen HTTP proxy: fast-fail a recorded-but-dead
 	// container with a clean 503 instead of accepting the WS upgrade and then
 	// failing the upstream dial.
-	if !Manager.KioskLive(name) {
+	if !Manager.ScreenLive(name) {
 		return e.JSON(http.StatusServiceUnavailable, map[string]string{"error": "container not running"})
 	}
 

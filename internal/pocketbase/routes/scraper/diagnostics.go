@@ -109,7 +109,7 @@ func init() {
 		// (dela path, resolved MenuItem + screen classification, map/gametype cursors,
 		// game_connection, pregame sentinel) + enumerated + selected map/gametype
 		// names. Admin-gated (the group binds RequireAuth + RequireAdmin). Feeds the
-		// admin kiosk diagnostics panel so an operator watches the box AND its live
+		// admin screen diagnostics panel so an operator watches the box AND its live
 		// reads side-by-side, reporting a dela/menu_item fingerprint for any screen
 		// without grepping beta.log.
 		Group.GET("/{name}/diagnostics", func(e *core.RequestEvent) error {

@@ -98,7 +98,7 @@ func TestInspect(t *testing.T) {
 	pbtest.GrantRole(t, app, admin.Id, "admin")
 	pbtest.MintToken(t, app, d, "machine", []string{"lan.*"})
 	pbtest.MintToken(t, app, d, "spectator", []string{"overlay.read_state:xc-1"})
-	rkid, _ := pbtest.MintToken(t, app, d, "device", []string{"kiosk.view:xc-1"})
+	rkid, _ := pbtest.MintToken(t, app, d, "device", []string{"box.view:xc-1"})
 	pbtest.SetField(t, app, "api_tokens", pbtest.TokenRecord(t, app, rkid).Id, "revoked", true)
 	ekid, _ := pbtest.MintToken(t, app, d, "machine", []string{"lan.*"})
 	pbtest.SetField(t, app, "api_tokens", pbtest.TokenRecord(t, app, ekid).Id, "expires_at", time.Now().Add(-time.Hour))

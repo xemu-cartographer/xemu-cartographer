@@ -30,7 +30,7 @@ func (s *memStore) Delete(string) error                                { return 
 
 // installFakeManager swaps the package Manager for one that knows a single
 // container whose browser web port is the given upstream, backed by a fake
-// `podman` that reports every container as running (so KioskLive passes and
+// `podman` that reports every container as running (so ScreenLive passes and
 // the proxy dials the upstream). Restored on cleanup.
 func installFakeManager(t *testing.T, name string, upstream *url.URL) {
 	t.Helper()
@@ -54,12 +54,12 @@ func installFakeManager(t *testing.T, name string, upstream *url.URL) {
 	t.Cleanup(func() { Manager = prev })
 }
 
-// kioskRequest builds the RequestEvent handleKioskProxy sees for GET
-// /api/admin/containers/{name}/kiosk/{path} with the credential carried the
-// way an iframe does it — ?token= on the entry-point, the kiosk_token cookie
+// screenRequest builds the RequestEvent handleScreenProxy sees for GET
+// /api/admin/containers/{name}/screen/{path} with the credential carried the
+// way an iframe does it — ?token= on the entry-point, the screen_token cookie
 // on sub-resources — or with no credential at all.
-func kioskRequest(app core.App, name, path, query, cookie string) (*core.RequestEvent, *httptest.ResponseRecorder) {
-	target := "http://pb.local/api/admin/containers/" + name + "/kiosk/" + path
+func screenRequest(app core.App, name, path, query, cookie string) (*core.RequestEvent, *httptest.ResponseRecorder) {
+	target := "http://pb.local/api/admin/containers/" + name + "/screen/" + path
 	if query != "" {
 		target += "?" + query
 	}
@@ -67,20 +67,20 @@ func kioskRequest(app core.App, name, path, query, cookie string) (*core.Request
 	req.SetPathValue("name", name)
 	req.SetPathValue("path", path)
 	if cookie != "" {
-		req.AddCookie(&http.Cookie{Name: kioskTokenCookie, Value: cookie})
+		req.AddCookie(&http.Cookie{Name: screenTokenCookie, Value: cookie})
 	}
 	rec := httptest.NewRecorder()
 	return &core.RequestEvent{App: app, Event: router.Event{Request: req, Response: rec}}, rec
 }
 
-// TestAuthorizeKioskAccess pins the kiosk gate's decisions on the rule table
+// TestAuthorizeBoxAccess pins the screen gate's decisions on the rule table
 // (design §10 item 11): a user whose usable gamertag is on the container's
-// live roster is admitted to both kiosk.view and kiosk.input; a user not on
-// the roster is not; a device key minted with kiosk.view:<box> only may view
+// live roster is admitted to both box.view and box.drive; a user not on
+// the roster is not; a device key minted with box.view:<box> only may view
 // that box but not drive it (and neither on another box); a request with no
 // credential is refused. The credential is read from ?token= or the
-// kiosk_token cookie alike.
-func TestAuthorizeKioskAccess(t *testing.T) {
+// screen_token cookie alike.
+func TestAuthorizeBoxAccess(t *testing.T) {
 	fake := &pbtest.FakeScraper{}
 	app, d := pbtest.NewAppWith(t, fake, func() string { return "" })
 	const box = "gate-box1"
@@ -101,7 +101,7 @@ func TestAuthorizeKioskAccess(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewAuthToken: %v", err)
 	}
-	_, viewKey := pbtest.MintToken(t, app, d, "device", []string{"kiosk.view:" + box})
+	_, viewKey := pbtest.MintToken(t, app, d, "device", []string{"box.view:" + box})
 
 	cases := []struct {
 		name   string
@@ -111,37 +111,37 @@ func TestAuthorizeKioskAccess(t *testing.T) {
 		action authz.Action
 		want   bool
 	}{
-		{"rostered member, kiosk.view via ?token=", "token=" + rosteredJWT, "", box, authz.ActionKioskView, true},
-		{"rostered member, kiosk.input via cookie", "", rosteredJWT, box, authz.ActionKioskInput, true},
-		{"member not on the roster, kiosk.view", "token=" + outsiderJWT, "", box, authz.ActionKioskView, false},
-		{"member not on the roster, kiosk.input", "", outsiderJWT, box, authz.ActionKioskInput, false},
-		{"rostered member, another box", "token=" + rosteredJWT, "", "gate-box2", authz.ActionKioskView, false},
-		{"device key kiosk.view only, kiosk.view", "token=" + viewKey, "", box, authz.ActionKioskView, true},
-		{"device key kiosk.view only, kiosk.input", "token=" + viewKey, "", box, authz.ActionKioskInput, false},
-		{"device key kiosk.view only, another box", "", viewKey, "gate-box2", authz.ActionKioskView, false},
-		{"anonymous", "", "", box, authz.ActionKioskView, false},
-		{"garbage token", "token=not.a.jwt", "", box, authz.ActionKioskView, false},
+		{"rostered member, box.view via ?token=", "token=" + rosteredJWT, "", box, authz.ActionBoxView, true},
+		{"rostered member, box.drive via cookie", "", rosteredJWT, box, authz.ActionBoxDrive, true},
+		{"member not on the roster, box.view", "token=" + outsiderJWT, "", box, authz.ActionBoxView, false},
+		{"member not on the roster, box.drive", "", outsiderJWT, box, authz.ActionBoxDrive, false},
+		{"rostered member, another box", "token=" + rosteredJWT, "", "gate-box2", authz.ActionBoxView, false},
+		{"device key box.view only, box.view", "token=" + viewKey, "", box, authz.ActionBoxView, true},
+		{"device key box.view only, box.drive", "token=" + viewKey, "", box, authz.ActionBoxDrive, false},
+		{"device key box.view only, another box", "", viewKey, "gate-box2", authz.ActionBoxView, false},
+		{"anonymous", "", "", box, authz.ActionBoxView, false},
+		{"garbage token", "token=not.a.jwt", "", box, authz.ActionBoxView, false},
 	}
 	for _, c := range cases {
-		e, _ := kioskRequest(app, c.box, "", c.query, c.cookie)
-		if got := authorizeKioskAccess(e, c.box, c.action); got != c.want {
-			t.Errorf("%s: authorizeKioskAccess = %v, want %v", c.name, got, c.want)
+		e, _ := screenRequest(app, c.box, "", c.query, c.cookie)
+		if got := authorizeBoxAccess(e, c.box, c.action); got != c.want {
+			t.Errorf("%s: authorizeBoxAccess = %v, want %v", c.name, got, c.want)
 		}
 	}
-	if authorizeKioskAccess(nil, box, authz.ActionKioskView) {
+	if authorizeBoxAccess(nil, box, authz.ActionBoxView) {
 		t.Error("nil event must be refused")
 	}
 }
 
-// TestKioskProxyHandlerGate drives handleKioskProxy end to end against a
+// TestScreenProxyHandlerGate drives handleScreenProxy end to end against a
 // fake podman Manager and a recording upstream: the rostered member's
-// entry-point request is proxied (200, the kiosk_token cookie is set, and the
+// entry-point request is proxied (200, the screen_token cookie is set, and the
 // upstream receives neither the ?token= nor the cookie), the sub-resource
 // request authenticated by the cookie is proxied without the cookie reaching
 // the upstream, and a member who is not on the roster, or no credential at
 // all, gets the 403 {"error":"forbidden"} without the upstream ever being
 // dialed.
-func TestKioskProxyHandlerGate(t *testing.T) {
+func TestScreenProxyHandlerGate(t *testing.T) {
 	fake := &pbtest.FakeScraper{}
 	app, _ := pbtest.NewAppWith(t, fake, func() string { return "" })
 	const box = "proxy-box1"
@@ -168,31 +168,31 @@ func TestKioskProxyHandlerGate(t *testing.T) {
 
 	// Entry point: ?token= admits, gets persisted as the cookie, never
 	// reaches the container.
-	e, rec := kioskRequest(app, box, "", "token="+rosteredJWT, "")
-	if err := handleKioskProxy(e); err != nil {
+	e, rec := screenRequest(app, box, "", "token="+rosteredJWT, "")
+	if err := handleScreenProxy(e); err != nil {
 		t.Fatalf("entry: %v", err)
 	}
-	if rec.Code != http.StatusOK || rec.Body.String() != "kiosk" {
-		t.Fatalf("entry: response = %d %q, want 200 \"kiosk\"", rec.Code, rec.Body.String())
+	if rec.Code != http.StatusOK || rec.Body.String() != "screen" {
+		t.Fatalf("entry: response = %d %q, want 200 \"screen\"", rec.Code, rec.Body.String())
 	}
 	if hits, seen := up.seen(); hits != 1 || seen.path != "/" || seen.query != "" || seen.cookie != "" {
 		t.Errorf("entry: upstream saw %+v (hits %d), want / with no credential", seen, hits)
 	}
 	cookieSet := false
 	for _, ck := range rec.Result().Cookies() {
-		if ck.Name == kioskTokenCookie && ck.Value == rosteredJWT && strings.HasPrefix(ck.Path, "/api/admin/containers/"+box+"/kiosk/") {
+		if ck.Name == screenTokenCookie && ck.Value == rosteredJWT && strings.HasPrefix(ck.Path, "/api/admin/containers/"+box+"/screen/") {
 			cookieSet = true
 		}
 	}
 	if !cookieSet {
-		t.Errorf("entry: kiosk_token cookie not set: %v", rec.Result().Cookies())
+		t.Errorf("entry: screen_token cookie not set: %v", rec.Result().Cookies())
 	}
 
 	// Sub-resource: the cookie admits; the upstream gets the path and the
-	// other cookies, not kiosk_token.
-	e, rec = kioskRequest(app, box, "app/ui.js", "v=2", rosteredJWT)
+	// other cookies, not screen_token.
+	e, rec = screenRequest(app, box, "app/ui.js", "v=2", rosteredJWT)
 	e.Request.AddCookie(&http.Cookie{Name: "theme", Value: "dark"})
-	if err := handleKioskProxy(e); err != nil {
+	if err := handleScreenProxy(e); err != nil {
 		t.Fatalf("sub-resource: %v", err)
 	}
 	if rec.Code != http.StatusOK {
@@ -213,8 +213,8 @@ func TestKioskProxyHandlerGate(t *testing.T) {
 		{"anonymous", "", ""},
 	}
 	for _, c := range denied {
-		e, rec := kioskRequest(app, box, "", c.query, c.cookie)
-		if err := handleKioskProxy(e); err != nil {
+		e, rec := screenRequest(app, box, "", c.query, c.cookie)
+		if err := handleScreenProxy(e); err != nil {
 			t.Fatalf("%s: %v", c.name, err)
 		}
 		if rec.Code != http.StatusForbidden || strings.TrimSpace(rec.Body.String()) != `{"error":"forbidden"}` {

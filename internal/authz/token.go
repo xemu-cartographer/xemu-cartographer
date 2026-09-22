@@ -259,8 +259,8 @@ var mintAllowList = map[string]map[Action]bool{
 		ActionScraperState:     true,
 	},
 	"device": {
-		ActionKioskView:     true,
-		ActionKioskInput:    true,
+		ActionBoxView:       true,
+		ActionBoxDrive:      true,
 		ActionBoxRead:       true,
 		ActionRoomJoin:      true,
 		ActionScraperState:  true,

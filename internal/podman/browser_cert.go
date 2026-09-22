@@ -23,7 +23,7 @@ func (m *Manager) certutilCmd() string {
 	return "certutil"
 }
 
-// browserProfileDir is the Firefox profile the jlesage kiosk uses. jlesage's
+// browserProfileDir is the Firefox profile the jlesage sidecar uses. jlesage's
 // firefox launches with -profile /config/profile (bind-mounted from
 // browserCfgDir/profile) and reads its NSS trust store (cert9.db/key4.db) from
 // there. Its cont-init only mkdir -p's this dir, never wipes it, so a
@@ -40,9 +40,9 @@ func certutilImportArgs(dbDir, nickname, caPath string) []string {
 	return []string{"-A", "-n", nickname, "-t", "C,,", "-i", caPath, "-d", dbDir}
 }
 
-// provisionBrowserTrust pre-seeds the firefox kiosk profile's NSS trust store
+// provisionBrowserTrust pre-seeds the sidecar's Firefox profile's NSS trust store
 // with the instance CA (browserCfgDir/profile/cert9.db) at create time, so the
-// kiosk loads https://localhost:<XemuHTTPS> — xemu's noVNC view, served by nginx
+// sidecar loads https://localhost:<XemuHTTPS> — xemu's noVNC view, served by nginx
 // with our SAN-pinned leaf (see cert.go) — without the "Warning: Potential
 // Security Risk Ahead" interstitial on first boot.
 //
@@ -57,7 +57,7 @@ func certutilImportArgs(dbDir, nickname, caPath string) []string {
 // (60-trust-xemu-cert.sh) remains as a durable, host-tool-free belt.
 //
 // Best-effort: returns an error (logged by the caller, Create still succeeds) if
-// certutil is missing or the import fails; the kiosk then relies on the
+// certutil is missing or the import fails; the sidecar then relies on the
 // in-container policies.json belt.
 func (m *Manager) provisionBrowserTrust(browserCfgDir, caPath string) error {
 	if _, err := os.Stat(caPath); err != nil {

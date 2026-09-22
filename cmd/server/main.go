@@ -350,7 +350,7 @@ func main() {
 			containers.SetManager(mgr)
 			containers.SetServices(svc)
 			// Player request-instance flow: provisions a fresh box booting the
-			// chosen catalog ISO. Additive to the untouched admin kiosk/VNC path.
+			// chosen catalog ISO. Additive to the untouched admin screen/VNC path.
 			playroutes.SetProvisioner(podmanProvisioner{m: mgr})
 
 			// Idle-out reaper (optional, REAPER_ENABLED): reclaim player-hosted
