@@ -144,6 +144,11 @@ jobs:
     name: E2E Tests
     runs-on: ubuntu-latest
     needs: frontend
+    # The suite takes ~30 s. Playwright's runner awaits a stopping worker's
+    # exit with no watchdog (ProcessHost.stop), so a wedged browser teardown
+    # hangs the job until GitHub's 6 h limit (2026-09-21, run 35657730454,
+    # twice). Fail fast instead.
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: xemu-cartographer/sveltekit
@@ -175,12 +180,23 @@ jobs:
         run: pnpm exec playwright install --with-deps chromium
 
       - name: Run e2e tests
-        run: pnpm test:e2e
+        # `list` on top of the config's `html`: the reporter Playwright adds on
+        # CI (dot) never emits a newline, so GitHub's line-buffered log shows
+        # nothing between "Running N tests" and the summary — a hang leaves no
+        # trace of which test it was in. DEBUG streams every API call and the
+        # browser's stderr the same way.
+        run: pnpm test:e2e --reporter=list,html
+        env:
+          DEBUG: pw:api,pw:browser
 
       - name: Upload test report
-        if: ${{ !cancelled() }}
+        # always(): a timed-out job counts as cancelled, and that is exactly
+        # when the per-test traces in test-results/ matter.
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
-          path: xemu-cartographer/sveltekit/playwright-report/
+          path: |
+            xemu-cartographer/sveltekit/playwright-report/
+            xemu-cartographer/sveltekit/test-results/
           retention-days: 7
