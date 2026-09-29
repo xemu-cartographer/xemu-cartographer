@@ -43,12 +43,17 @@ authority: `render_model.cs`, `Halo2Common.cs`, `CacheFile*.cs`, `bitmap.cs`.
    orthographic + transparent into three passes:
    `<pose>.png` (diffuse), `<pose>_p.png` (primary coverage), `<pose>_s.png`
    (secondary coverage).
-4. **`spartan_composite.py`** / **`../../sveltekit/src/lib/utils/spartan-art.ts`**
-   — the render-on-change compositor: fill primary coverage with armor colour 1
-   and secondary with colour 2 (multiplied over the diffuse), drop the emblem
-   decal on the chest. `spartan-art.ts` mirrors `emblem-art.ts`'s
-   `<mask><image>`+`<rect>` technique; verified rendering headless via chromium
-   (`make_proof_html.py` → `out/proof.png`).
+4. **`spartan_composite.py`** — the render-on-change compositor: fill primary
+   coverage with armor colour 1 and secondary with colour 2 (multiplied over the
+   diffuse), drop the emblem decal on the chest; verified rendering headless via
+   chromium (`make_proof_html.py` → `out/proof.png`). Its TypeScript port
+   (`sveltekit/src/lib/utils/spartan-art.ts`, `emblem-art.ts`'s
+   `<mask><image>`+`<rect>` technique) was **deleted in `76807ad` (2026-08-10)
+   and was never imported by the app**; the published renders under
+   `sveltekit/static/spartan/` were removed in the xc-studio S0 prep
+   (2026-09-28) for the same reason. Nothing in the frontend consumes this
+   pipeline's output today — `MCC-POSES.md`'s publish paths describe the
+   pre-S0 layout.
 
 ## Run
 
@@ -75,13 +80,19 @@ python3 spartan_composite.py --render out/render \
   embedded diffuse. Round-trips in Blender.
 - `masterchief.obj` — universal triangulated mesh (pos/uv/normal).
 - `masterchief_cc.png` (+ `_p`/`_s` masks), `masterchief.png` diffuse.
-- `out/render/<pose>{,_p,_s}.png` for idle / t_pose / salute / crouch.
+- `out/render/<pose>{,_p,_s}.png` — the hand-posed renders from
+  `blender_build_render.py` (idle / t_pose / salute / crouch). The published set
+  was **24 poses**, not four: the 21 MCC-retargeted stances from
+  `blender_pose_render.py` (see `MCC-POSES.md`) plus the hand-posed extras.
 
 ## IP
 
 Real Halo 2 asset; for Stewart's personal / LAN use with his own copy of the
 game. Do not redistribute the extracted assets. `../reclaimer-ref/` holds copies
-of Reclaimer source (MIT, © Gravemind2401) used only as a format reference.
+of Reclaimer source (**GPL-3.0**, © Gravemind2401 — this file said MIT until
+2026-09-28, which was wrong) used only as a format reference: the decoders here
+are a Python reimplementation and no Reclaimer code ships with the app, but the
+licence question is the owner's call, not settled by this note.
 
 ## Notes / next
 

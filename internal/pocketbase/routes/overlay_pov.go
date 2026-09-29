@@ -296,6 +296,16 @@ func handleOverlayConsole(e *core.RequestEvent) error {
 	if mgr == nil {
 		return e.JSON(http.StatusServiceUnavailable, map[string]string{"error": "scraper not running"})
 	}
+	// Upstream-down is not console-absent. In wire mode every Inspect fails
+	// fast with xcclient.ErrUpstreamDown while the daemon stream is away, and
+	// the bool-returning Inspect port cannot carry that error, so the resolver
+	// below would answer "not found" for a console that is merely
+	// unobservable — telling the caster "start a game" when the truth is
+	// "the scraper is down". Gate on the same check the scraper routes use
+	// (always false in-process) and say so: 503 {"error":"upstream"}.
+	if scraperroutes.UpstreamDown(mgr) {
+		return e.JSON(http.StatusServiceUnavailable, map[string]string{"error": "upstream"})
+	}
 	name := e.Request.PathValue("name")
 	if strings.TrimSpace(name) == "" {
 		return e.JSON(http.StatusBadRequest, map[string]string{"error": "console name required"})

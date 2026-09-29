@@ -42,8 +42,8 @@
 	// transparent area fall where it may (or add ?anchor=center to centre it).
 	const OVERLAYS = [
 		{ id: 'overlay', label: 'POV', path: '/overlay/', size: '1440 × 1080' },
-		{ id: 'scorebug', label: 'Scorebug', path: '/scorebug/', size: '480 × 84' },
-		{ id: 'leaderboard', label: 'Leaderboard', path: '/leaderboard/', size: '340 × 560 (4v4)' },
+		{ id: 'scorebug', label: 'Scorebug', path: '/scorebug/', size: '700 × 84' },
+		{ id: 'leaderboard', label: 'Leaderboard', path: '/leaderboard/', size: '430 × 560 (4v4)' },
 		{ id: 'postgame', label: 'Postgame', path: '/postgame/', size: '900 × 700 (4v4)' }
 	];
 

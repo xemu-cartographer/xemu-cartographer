@@ -14,6 +14,8 @@
 	import Card from '$lib/components/ui/Card.svelte';
 	import ActionBar from '$lib/components/settings/ActionBar.svelte';
 	import NamePlate from '$lib/overlay/NamePlate.svelte';
+	// Same faces as the OBS routes (additive CSS), so the preview measures true.
+	import '$lib/styles/overlay-base.css';
 	import { GAMERTAG_MAX_LEN } from '$lib/utils/gamertag';
 	import type { MeGamertag } from '$lib/utils/identity';
 

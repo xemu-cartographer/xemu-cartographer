@@ -41,7 +41,10 @@ byte-for-byte into the same `host:*` rooms; in-process there is no upstream and 
   reconnect, re-`join_room`, and let join replay rebuild state (the frontend already
   reconnects on every close it did not see `session_revoked` before). Third-party
   consumers that only saw `session_revoked` / `room_left` before should expect this
-  close too.
+  close too. The `1012` close is **league-only behaviour, not part of the wire
+  contract** — the daemon never emits it and the frozen dialect has no resync code;
+  like the daemon-side extensions in `xc-scraper/docs/wire.md` Appendix A, it sits
+  outside the contract, on the league side.
 
 Daemon-only extensions (the `xc:` room family, the read/control HTTP API, the
 finished-game webhook) are documented in `../xc-scraper/docs/wire.md` appendix A and

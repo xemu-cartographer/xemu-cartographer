@@ -1,8 +1,8 @@
 # M25 — OBS spectator overlays (token-auth render pages)
 
-> **Status:** In progress (mock-verified; live verification pending a play session)
+> **Status:** Closed 2026-09-28 — superseded; the render pages were deleted in `eda3056` (2026-07-18) before any live pass. See the Log.
 > **Started:** 2026-06-20
-> **Completed:** —
+> **Completed:** — (closed 2026-09-28 without the live pass; see Log)
 > **Depends on:** [M10 — Overlay revamp + new browser sources](M10-overlay-revamp.md) (overlay-token auth + dummy filter), [M05 phase model](M05-phase-model-refactor.md) (v2 WS feed), [M09](M09-match-aware-kiosk.md) (membership/roster)
 
 ## Goal
@@ -98,3 +98,4 @@ The overlays lean on the **runtime-verified** parts of the feed and degrade the 
 _Append-only. Never edit past entries; add a new dated line._
 
 - 2026-06-20: created — scoreboard + status-strip render pages on the shipped M10 overlay-token contract, mock mode, mint-page URL emission; mock-verified end-to-end (check/lint/test/build + headless render). Live match pass + dummy-filter wiring outstanding.
+- 2026-09-28: **Closed (xc-studio S0) — superseded.** The `/overlays/[instance]/` scoreboard + status strip and the `/overlays/manage/` mint page were deleted in `eda3056` (2026-07-18), four weeks after this milestone opened; the live pass never ran. The overlay-token contract they rendered on went in `76807ad` (2026-08-10). The current OBS surface is `/overlay/ /scorebug/ /leaderboard/ /postgame/` (`58459f2`, `?console=` + `?spectator=`), now being extracted to the private `xemu-cartographer/xc-studio` repo. **Retired from the OBS steps above:** do not tick "Refresh browser when scene becomes active" (it reloads the postgame source and blanks MATCH TIME), and sources are no longer 1920×1080 — each graphic is sized to its content (catalog in `sveltekit/src/routes/studio/+page.svelte`).

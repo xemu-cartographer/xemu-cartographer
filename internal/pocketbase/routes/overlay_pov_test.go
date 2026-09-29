@@ -16,6 +16,7 @@ import (
 	"github.com/xemu-cartographer/xemu-cartographer/internal/authz/pb/pbtest"
 	scraperiface "github.com/xemu-cartographer/xemu-cartographer/internal/guards/interfaces/scraper"
 	scraperroutes "github.com/xemu-cartographer/xemu-cartographer/internal/pocketbase/routes/scraper"
+	"github.com/xemu-cartographer/xemu-cartographer/internal/xcclient"
 )
 
 // fakeInspect implements scraperiface.Inspect for the resolver test.
@@ -445,5 +446,68 @@ func TestConsolesRouteRequiresListScope(t *testing.T) {
 	_, spectator := pbtest.MintToken(t, app, d, "spectator", []string{"overlay.read_state:beta-stream"})
 	if status := list(nil, spectator); status != http.StatusForbidden {
 		t.Fatalf("spectator key: status %d, want 403", status)
+	}
+}
+
+// wireFake is overlayFake plus the Ctl() the scraper routes gate on
+// (scraperroutes.Wire / UpstreamDown). With connected=false every proxied
+// Inspect fails fast with xcclient.ErrUpstreamDown in production, which the
+// bool-returning Inspect port can only report as "not present" — so the fake
+// carries no states either, mirroring what the resolver would actually see.
+type wireFake struct {
+	overlayFake
+	connected bool
+}
+
+func (f wireFake) Ctl() *xcclient.Ctl {
+	return &xcclient.Ctl{Connected: func() bool { return f.connected }}
+}
+
+// TestConsoleRouteUpstreamDownIsNotAbsent pins xc-studio F0.4 on
+// GET /api/overlay/console/{name}: a manager that cannot be inspected answers
+// 503 {"error":"upstream"} (no manager at all: 503 as before), while "no live
+// lobby sees that console" stays a 404 — the caster is told "the scraper is
+// down" and "start a game" respectively, never one for the other.
+func TestConsoleRouteUpstreamDownIsNotAbsent(t *testing.T) {
+	fx := fixture()
+	app, _ := newOverlayAppWith(t, fx)
+	mk := func(connected bool, states map[string]scraperiface.InspectState) wireFake {
+		fs := &pbtest.FakeScraper{}
+		for _, info := range fx.infos {
+			fs.AddInstance(info.Name, info.XboxName)
+		}
+		return wireFake{overlayFake{FakeScraper: fs, states: states}, connected}
+	}
+	cases := []struct {
+		name       string
+		manager    scraperiface.Service
+		console    string
+		wantStatus int
+		wantError  string
+	}{
+		// No manager wired at all: the pre-existing 503.
+		{"nil manager", nil, "stream", http.StatusServiceUnavailable, "scraper not running"},
+		// Wire mode, stream away: Inspect fails fast (no states), which used
+		// to fall through to the resolver's "console not found".
+		{"upstream down", mk(false, nil), "stream", http.StatusServiceUnavailable, "upstream"},
+		// Wire mode, stream up, name unknown to every live lobby.
+		{"no match", mk(true, fx.states), "GreenBox", http.StatusNotFound, "console not found in any live lobby"},
+		// Wire mode, stream up, the own console of a live box.
+		{"match", mk(true, fx.states), "stream", http.StatusOK, ""},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			scraperroutes.SetManager(c.manager)
+			status, body := overlayGet(t, app, nil, "/api/overlay/console/"+c.console, c.console, "", nil, handleOverlayConsole)
+			if status != c.wantStatus {
+				t.Fatalf("status %d body %v, want %d", status, body, c.wantStatus)
+			}
+			if c.wantError != "" && body["error"] != c.wantError {
+				t.Fatalf("body %v, want error %q", body, c.wantError)
+			}
+			if c.wantStatus == http.StatusOK && body["instance"] != "beta-stream" {
+				t.Fatalf("body %v, want instance beta-stream", body)
+			}
+		})
 	}
 }
