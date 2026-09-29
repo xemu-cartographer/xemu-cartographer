@@ -171,6 +171,8 @@ Protected pages can be served through custom PocketBase routes that validate JWT
 5. Register OnTerminate hook: cancel discovery watcher → cancel reaper → `feed.stop()` (in-process: stop every runner + close the manager; wire: `Wire.Close` = stop the stream, demand timers and pusher; must precede hub shutdown so in-flight tick broadcasts don't write to a closing channel) → stop hub → close Disgo bot
 6. Call `app.Start()` (blocking)
 
+> **"Overlay" means three things in this repo.** (a) A **qcow2 disk overlay** — the per-instance copy-on-write HDD (`scrMgr.SetOverlayResolver` → `podman.OverlayPath`, xc-scraper's `OverlayFor`; M26, `internal/podman/overlay.go`): the "overlay resolver" in the boot list above is this one. (b) An **OBS graphic** — the browser-source routes `/overlay/ /scorebug/ /leaderboard/ /postgame/` (`lib/overlay/*`, `lib/styles/overlay-base.css`, the `hideLayout` routes under Frontend Structure; being extracted to the private `xemu-cartographer/xc-studio` repo). (c) The **nav drawer** — the mobile slide-in `NavPanel` under Responsive layout.
+
 ### Key packages
 
 The README's [Project Structure](README.md#project-structure) tree covers the directory layout. The table below highlights packages with cross-cutting roles or non-obvious behavior.

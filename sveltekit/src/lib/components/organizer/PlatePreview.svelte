@@ -4,6 +4,9 @@
 	// cards and the crop-dialog chrome render the plate EXACTLY as the overlay
 	// draws it. The sample identity mirrors the handoff mock.
 	import NamePlate from '$lib/overlay/NamePlate.svelte';
+	// The overlay's self-hosted variable faces (additive: @font-face + tokens
+	// only), so the plate measures here exactly as the OBS routes render it.
+	import '$lib/styles/overlay-base.css';
 
 	let {
 		bg = '',

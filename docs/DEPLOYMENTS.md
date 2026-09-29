@@ -23,7 +23,7 @@ Three tiers. Deployed tiers hold **artifacts + state only** (binary, `pb_data/`,
 
 | Tier | Purpose | Runs from | How | Port | Hostname | Bot |
 | --- | --- | --- | --- | --- | --- | --- |
-| **dev** | live-reload coding | this working tree (Air + Vite HMR) | `./run-dev.sh` | `19099` vite / `19090` backend | `lab.norcal.pro` (only while up) | **off** (forced) |
+| **dev** | live-reload coding | this working tree (Air + Vite HMR) | `./run-dev.sh` | `19099` vite / `19090` backend | `dev.norcal.pro` (only while up) | **off** (forced) |
 | **pre** (test) | the gate before prod — merged branches soak here | `/srv/http/xemu-cartographer/pre/` | `/srv/registry/srv-pre.sh xemu-cartographer [ref]` → systemd **user** unit `site-xemu-cartographer-pre` | `18099` | `beta.norcal.pro` | cart-beta **test** app (per tier `.env`) |
 | **prod** | the live site | `/srv/http/xemu-cartographer/prod/` | systemd unit `site-xemu-cartographer-prod` (migrated 2026-08-27; still root + `0.0.0.0` — de-root/loopback is a pending follow-up) | `8099` | `lan.norcal.pro` | cart **prod** app |
 
@@ -38,8 +38,14 @@ Three tiers. Deployed tiers hold **artifacts + state only** (binary, `pb_data/`,
   ephemeral (`tmp/pb_data`, wiped on exit).
 - **Discord: one gateway per bot token** — each tier that runs the bot needs its
   own Discord application; dev never runs it.
-- Naming hazard: prod `lan.norcal.pro` and dev `lab.norcal.pro` are one letter
-  apart in the same ingress list — double-check which you're editing.
+- Naming hazard: `lab.norcal.pro` is **norcal-halo-site**, not this project — the
+  dev tier is `dev.norcal.pro` (the cloudflared ingress and
+  `sveltekit/vite.config.dev.ts:28-30` agree); prod `lan.norcal.pro` sits in the
+  same ingress list — double-check which you're editing.
+- *Planned (xc-studio):* the OBS overlay surface moves to its own **static**
+  tiers, `studio.norcal.pro` (prod) and `studio-beta.norcal.pro` (pre) — no
+  binary, no `pb_data`, no port in this table; documented in the private
+  `xemu-cartographer/xc-studio` repo, not in this file.
 
 ### The xc-scraper daemon per tier
 
