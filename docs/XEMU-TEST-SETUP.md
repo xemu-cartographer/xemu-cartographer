@@ -58,7 +58,7 @@ Prereqs: `xemu` on PATH, `python-evdev` (`python3 -c "import evdev"`), `xdotool`
 ## 1. Quick single-instance smoke (no players, just "is it alive")
 
 ```sh
-cd ~/repos/halo-offset-mapper
+cd ~/repos/Stewball32/halo-offset-mapper
 
 # one-time: generate eeproms + tomls into ~/.local/share/xemu/xemu/
 python3 scripts/fleet/make_eeproms.py      # eeprom1..4.bin (distinct MACs)

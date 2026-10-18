@@ -99,12 +99,12 @@ What it does (see the script header for the full contract): builds the ref in a
 is never touched). Since the step 7 restructure `go.mod` resolves
 `github.com/xemu-cartographer/xc-scraper` via `replace => ../xc-scraper`, so the
 script (sibling-aware since 2026-09-16) adds a **second detached worktree** of
-the local `~/repos/xc-scraper` checkout next to the flagship one — `main` by
+the local `~/repos/xemu-cartographer/xc-scraper` checkout next to the flagship one — `main` by
 default, `SIBLING_REF=<committish>` overrides — so the `replace` resolves without
 any network access or credential (the sibling is the **private** org repository
 `github.com/xemu-cartographer/xc-scraper`; only CI needs the
 `XC_SCRAPER_CHECKOUT_TOKEN` secret, the host builds from the local clones —
-`git -C ~/repos/xc-scraper pull` first if pre should get a newer sibling).
+`git -C ~/repos/xemu-cartographer/xc-scraper pull` first if pre should get a newer sibling).
 `task container:build` does the same for images by passing the sibling as a
 named build context (`podman build --build-context xc-scraper=../xc-scraper`,
 see `Containerfile`; `.containerignore` keeps `sveltekit/node_modules`, `pb_data`,
@@ -143,7 +143,7 @@ sudo /srv/registry/srv-prod-cutover.sh rollback
 ```
 
 `srv-prod-stage.sh` is `srv-pre.sh`'s build stage pointed at prod (same detached
-worktrees of the local `~/repos/xemu-cartographer` + `~/repos/xc-scraper`
+worktrees of the local `~/repos/xemu-cartographer/xemu-cartographer` + `~/repos/xemu-cartographer/xc-scraper`
 checkouts, same ldflags stamps and provenance checks, `SIBLING_REF=` override).
 It warns when pre is not on the ref being staged — prod gets what soaked on pre.
 It writes only inert files next to the live ones: `server.new`,
